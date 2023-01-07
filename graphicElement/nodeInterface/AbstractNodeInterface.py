@@ -4,6 +4,26 @@ from graphicElement.nodeGraphics.plug import Plug
 from graphicElement.nodeGraphics.Connection import *
 import importlib
 
+"""
+La classe AbstractNodeInterface é una sorta di "ponte" tra la parte grafica 
+e quella di dati di un nodo. Ha una proprietà nodeData di tipo AbstractNodeData 
+che rappresenta il nodo di dati, e una proprietà nodeGraphic di tipo AbstractGraphicNode 
+che rappresenta il nodo grafico.
+
+La classe AbstractNodeData, d'altra parte, é la classe base per tutti i nodi di dati. 
+Ha proprietà inPlugs e outPlugs, che sono liste di oggetti di tipo AbstractPlug, 
+e metodi per gestire le connessioni tra i nodi.
+
+La classe AbstractGraphicNode, infine, è la classe base per tutti i nodi grafici. 
+Ha una proprietà nodeData di tipo AbstractNodeData che rappresenta il nodo di dati associato, 
+e metodi per gestire l'interfaccia grafica del nodo.
+
+Il metodo addNodeToTheScene della classe canvas viene chiamato quando viene creato un nuovo nodo. 
+Crea un'istanza di AbstractNodeInterface, imposta la posizione del nodo grafico e lo aggiunge 
+alla scena grafica. Inoltre, aggiunge l'istanza di AbstractNodeInterface alla lista nodesInTheScene.
+
+"""
+
 
 class AbstractNodeInterface:
     nodeGraphic: AbstractGraphicNode

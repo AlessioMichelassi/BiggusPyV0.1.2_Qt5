@@ -9,12 +9,12 @@ class Observer:
         self.observedNodesList.append(node)
         node.addObserver(self)
 
-    def update(self):
+    def update(self, node):
         for observed_node in self.observedNodesList:
             observed_node.calculate()
 
 
-class AbstractPlug:
+class AbstractDataPlug:
     name: str = ""
 
     def __init__(self, index, name, value, parentNode):
@@ -33,16 +33,18 @@ class AbstractPlug:
 
 class AbstractNodeData:
     index = 0
-    inPlugs = []
-    outPlugs = []
+    dataInPlugs: list[AbstractDataPlug] = []
+    dataOutPlugs: list[AbstractDataPlug] = []
     resetValue = None
     isDebugging = True
 
     def __init__(self, numIn: int, numOuts: int, interface=None):
-        self.name = ""
+        self.name = "abstractDataNode"
         self.interface = interface
         self.numberOfInputPlugs = numIn
         self.numberOfOutputPlugs = numOuts
+        self.dataInPlugs: list[AbstractDataPlug] = []
+        self.dataOutPlugs: list[AbstractDataPlug] = []
 
         self.observers = []
 
@@ -52,11 +54,11 @@ class AbstractNodeData:
 
     def createPlugs(self):
         for i in range(self.numberOfInputPlugs):
-            plugIn = AbstractPlug(i, "In_", i, self)
-            self.inPlugs.append(plugIn)
+            plugIn = AbstractDataPlug(i, "In_", i, self)
+            self.dataInPlugs.append(plugIn)
         for i in range(self.numberOfOutputPlugs):
-            plugOut = AbstractPlug(i, "Out_", i, self)
-            self.outPlugs.append(plugOut)
+            plugOut = AbstractDataPlug(i, "Out_", i, self)
+            self.dataOutPlugs.append(plugOut)
 
     def addObserver(self, node):
         observer = Observer()
@@ -69,40 +71,87 @@ class AbstractNodeData:
 
     def __str__(self):
         returnString = f"Print from {self.name}:\n"
-        for i in self.inPlugs:
+        for i in self.dataInPlugs:
             returnString += f"{i.name} = {i.value} "
-        for i in self.outPlugs:
+        for i in self.dataOutPlugs:
             returnString += f"{i.name} = {i.value} "
         if self.interface is not None:
-            return f"{self.interface.title} InputNumber: {self.numberOfInputPlugs}, OutputNumber {self.numberOfOutputPlugs}"
+            return f"{self.interface.name} InputNumber: {self.numberOfInputPlugs}, OutputNumber {self.numberOfOutputPlugs}"
         else:
             return f"{returnString}: InPlugNumber: {self.numberOfInputPlugs}," \
                    f"OutPlugNumber {self.numberOfOutputPlugs}"
 
     def changeInputValue(self, inputIndex, value):
-        self.inPlugs[inputIndex].value = value
+        """
+        La funzione changeInputValue viene chiamata quando un plug
+        di input viene collegato a un altro plug di output.
+        La funzione riceve in input l'indice del plug di input
+        del nodo che viene modificato e il valore che deve assumere.
+        Dopodiché assegna il valore al plug di input e chiama la funzione calculate().
+
+        La funzione calculate() viene implementata in modo diverso per ogni nodo,
+        in quanto ogni nodo può essere utilizzato per effettuare un'operazione differente.
+        In generale, questa funzione viene utilizzata per aggiornare il valore dei plugs
+        di output del nodo in base ai valori dei plugs di input.
+
+        Una volta che il valore dei plugs di output viene aggiornato,
+        il nodo chiama la funzione notifyToObserver(),
+        che notifica a tutti i nodi osservatori che il valore del nodo è cambiato,
+        in modo da permettergli di aggiornare i loro valori di conseguenza.
+        :param inputIndex: Indice del pLug in ingresso da cambiare
+        :param value: valore da cambiare
+        :return:
+        """
+        self.dataInPlugs[inputIndex].value = value
         isDebugging = False
         if isDebugging:
             print(f"debugging from ChangeInputValue:"
                   f"{self.name} - changed Input value "
-                  f"{self.inPlugs[inputIndex].name} "
-                  f"= {self.inPlugs[inputIndex].value}")
+                  f"{self.dataInPlugs[inputIndex].name} "
+                  f"= {self.dataInPlugs[inputIndex].value}")
         self.calculate()
 
     def calculate(self):
-        for i, out_plug in enumerate(self.outPlugs):
+        """
+        La funzione calculate di AbstractNodeData viene
+        chiamata quando si vuole calcolare il nuovo valore dei plugs di output del nodo.
+        :return:
+        """
+        for i, out_plug in enumerate(self.dataOutPlugs):
             out_plug.value = self.calculateOutput(i)
         self.notifyToObserver()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
+        """
+        La funzione calculateOutput è una funzione astratta,
+        ovvero una funzione che deve essere implementata nelle
+        classi che estendono AbstractNodeData, ma che non ha
+        un'implementazione di default.
+
+        Ciò significa che ogni classe che estende AbstractNodeData
+        deve implementare calculateOutput, che dovrà calcolare
+        il nuovo valore del plug di output in base all'indice
+        del plug passato come argomento.
+
+        Quando calculate viene chiamata, per ogni plug di output
+        del nodo viene chiamata calculateOutput passando come argomento
+        l'indice del plug e il risultato viene assegnato al valore del plug.
+
+        In questo modo, ogni volta che si vuole calcolare il nuovo valore
+        dei plugs di output del nodo, basta chiamare calculate e tutti
+        i plugs di output verranno aggiornati.
+
+        :param outIndex:
+        :return:
+        """
         raise NotImplementedError()
 
     def connect(self, node: "AbstractNodeData", inIndex: int, outIndex: int):
-        value = self.outPlugs[outIndex].value
+        value = self.dataOutPlugs[outIndex].value
         node.changeInputValue(inIndex, value)
 
     def disconnect(self, node: "AbstractNodeData", input_index: int, output_index: int):
-        node.inPlugs[input_index] = self.resetValue
+        node.dataInPlugs[input_index] = self.resetValue
 
 
 #####################################################
@@ -118,28 +167,29 @@ class NumberNode(AbstractNodeData):
         super().__init__(numIn=1, numOuts=1)
         self.name = "NumberNode"
         self.resetValue = value
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
+        print(self)
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
-        self.outPlugs[outIndex].value = self.inPlugs[0].value
-        return self.outPlugs[0].value
+        self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value
+        return self.dataOutPlugs[0].value
 
 
 class SumNode(AbstractNodeData):
     def __init__(self):
         super().__init__(numIn=2, numOuts=1)
         self.name = "SumNode"
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
-        self.outPlugs[outIndex].value = self.inPlugs[0].value + self.inPlugs[1].value
+        self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value + self.dataInPlugs[1].value
         self.notifyToObserver()
-        return self.outPlugs[outIndex].value
+        return self.dataOutPlugs[outIndex].value
 
 
 class ProductNode(AbstractNodeData):
@@ -197,7 +247,8 @@ class RemainderNode(AbstractNodeData):
         self.createPlugs()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
-        self.outPlugs[outIndex].value = self.inPlugs[0].value % self.inPlugs[1].valueself.notifyToObserver()
+        self.outPlugs[outIndex].value = self.inPlugs[0].value % self.inPlugs[1].value
+        self.notifyToObserver()
         return self.outPlugs[outIndex].value
 
 
@@ -261,11 +312,6 @@ class DictNode(AbstractNodeData):
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
-    def calculate(self):
-        key = self.inPlugs[0]
-        value = self.inPlugs[1]
-        self.outPlugs[0] = {key: value}
-
     def calculateOutput(self, outIndex: int) -> Union[str]:
         key = self.inPlugs[0].value
         value = self.inPlugs[1].value
@@ -308,13 +354,13 @@ class ReplaceNode(AbstractNodeData):
 class PrintNode(AbstractNodeData):
     def __init__(self):
         super().__init__(numIn=1, numOuts=0)
-        self.inPlugs[0].value = None
+        self.dataInPlugs[0].value = None
 
     def calculateOutput(self, outIndex):
-        return self.inPlugs[0].value
+        return self.dataInPlugs[0].value
 
     def connect(self, endNode: "AbstractNodeData", input_index: int, output_index: int):
-        endNode.inPlugs[input_index] = self.outPlugs[output_index]
+        endNode.dataInPlugs[input_index] = self.dataOutPlugs[output_index]
 
 
 #####################################################
@@ -415,7 +461,7 @@ class ForLoopNode(AbstractNodeData):
             return self.currentValue
 
     def changeInputValue(self, inputIndex, value):
-        self.inPlugs[inputIndex].value = value
+        self.dataInPlugs[inputIndex].value = value
         # il valore di ingresso del nodo For Loop non viene utilizzato,
         # quindi si può ignorare questa chiamata
         self.calculate()
@@ -464,6 +510,6 @@ if __name__ == "__main__":
     forLoopNode = ForLoopNode(0, 5)
 
     # connetti un nodo che stampa il valore corrente del ciclo all'uscita 1 del nodo For Loop
-    #printNode = PrintNode()
-    #forLoopNode.connect(printNode, 0, 1)
+    # printNode = PrintNode()
+    # forLoopNode.connect(printNode, 0, 1)
     print(forLoopNode)

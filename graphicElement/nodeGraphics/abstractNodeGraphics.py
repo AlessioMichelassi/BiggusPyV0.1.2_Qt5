@@ -20,7 +20,7 @@ class superText(QGraphicsTextItem):
 
     def eventFilter(self, obj, event):
         # Verifica se l'evento è una pressione del tasto Invio
-        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
+        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Return:
             # Esegue l'azione desiderata (ad esempio, imposta il nuovo valore del testo)
             self.setText(self.toPlainText().strip())
             return True
@@ -76,8 +76,8 @@ class AbstractGraphicNode(QGraphicsItem):
         self.setZValue(1)
 
         # Create the input and output plugs
-        self.inputPlugs = []
-        self.outputPlugs = []
+        self.graphicInputPlugs = []
+        self.graphicOutputPlugs = []
 
         # Create the label
         self.createTitleText()
@@ -91,11 +91,10 @@ class AbstractGraphicNode(QGraphicsItem):
 
     def createTitleText(self):
         self.txtTitle = QGraphicsTextItem(self)
-        self.txtTitle.setPlainText(self.nodeInterface.nodeData.title)
         self.txtTitle.setTextInteractionFlags(Qt.TextInteractionFlag.TextEditorInteraction)
+        self.txtTitle.setPlainText(self.nodeInterface.nodeData.title)
         x = (self.txtTitle.boundingRect().width()//3)
         self.txtTitle.setPos(-x, -30)  # Posiziona la label 20 pixel sopra il centro del nodo
-
         self.txtTitle.setDefaultTextColor(Qt.GlobalColor.white)
         self.txtTitle.setZValue(2)
 
@@ -110,22 +109,9 @@ class AbstractGraphicNode(QGraphicsItem):
         self.txtValue.setDefaultTextColor(Qt.GlobalColor.black)
         self.txtValue.setZValue(2)
 
-    def onTextChanged(self):
-        # Prendi il testo inserito dall'utente
-        text = self.txtValue.toPlainText()
-        try:
-            # Converte il testo in un intero
-            value = int(text)
-            self.nodeData.value = value
-            # Adesso puoi usare il valore inserito dall'utente come vuoi
-            print(f'Valore inserito: {value}')
-        except ValueError:
-            # Se il testo non può essere convertito in un intero, mostra un messaggio di errore
-            print("Errore", "Il valore inserito non è un intero!")
-
     def setValue(self, value):
         # sourcery skip: assign-if-exp, hoist-statement-from-if
-        self.nodeData.inPlugs[0] = int(value)
+        self.nodeData.dataInPlugs[0].value = int(value)
         self.txtValue.setPlainText(str(value))
 
     def setTitle(self, text):
@@ -147,7 +133,7 @@ class AbstractGraphicNode(QGraphicsItem):
             plug.index = i
             plug.setPos(QPointF(x, y))
             y += plug.diameter * 3
-            self.inputPlugs.append(plug)
+            self.graphicInputPlugs.append(plug)
 
     def createPlugsOut(self, outNumber):
         x = self.width - 2
@@ -161,7 +147,7 @@ class AbstractGraphicNode(QGraphicsItem):
             plug = Plug(f"Out_{i}", 8, self)
             plug.index = i
             plug.setPos(QPointF(x, y))
-            self.outputPlugs.append(plug)
+            self.graphicOutputPlugs.append(plug)
             y += plug.diameter * 3
 
     def boundingRect(self):

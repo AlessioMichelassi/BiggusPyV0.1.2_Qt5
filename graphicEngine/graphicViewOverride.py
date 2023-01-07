@@ -6,6 +6,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 from graphicElement.nodeGraphics.abstractNodeGraphics import *
+from graphicElement.nodeInterface.AbstractNodeInterface import AbstractNodeInterface
 
 CANVAS_SCALE = 0.9
 CENTER_ON = (430, 340)
@@ -61,14 +62,14 @@ class graphicViewOverride(QGraphicsView):
         self.setRenderHints(QPainter.RenderHint.Antialiasing
                             | QPainter.RenderHint.TextAntialiasing | QPainter.RenderHint.SmoothPixmapTransform)
 
-        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
+        self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
-        self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
-        self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
 
     def wheelEvent(self, event):
         self.scaleScene(math.pow(2.0, -event.angleDelta().y() / 240.0))
@@ -137,7 +138,7 @@ class graphicViewOverride(QGraphicsView):
 
     def middleMouseButtonPress(self, event):
         self._middleMousePressed = True
-        self.setDragMode(QGraphicsView.DragMode.NoDrag)
+        self.setDragMode(QGraphicsView.NoDrag)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self._dragPos = event.pos()
         event.accept()
@@ -161,7 +162,7 @@ class graphicViewOverride(QGraphicsView):
 
     def middleMouseButtonRelease(self, event):
         self._middleMousePressed = False
-        self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
         self._isPanning = False
         self.setCursor(Qt.CursorShape.ArrowCursor)
         super().mouseReleaseEvent(event)
@@ -203,11 +204,11 @@ class graphicViewOverride(QGraphicsView):
             self._dragPos = event.pos()
             if modifier == Qt.KeyboardModifier.ControlModifier:
                 self._middleMousePressed = True
-                self.setDragMode(QGraphicsView.DragMode.NoDrag)
+                self.setDragMode(QGraphicsView.NoDrag)
                 self.setCursor(Qt.CursorShape.OpenHandCursor)
         elif modifier == Qt.KeyboardModifier.ControlModifier:
             self._middleMousePressed = False
-            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+            self.setDragMode(QGraphicsView.RubberBandDrag)
             self._isPanning = False
             self.setCursor(Qt.CursorShape.ArrowCursor)
 

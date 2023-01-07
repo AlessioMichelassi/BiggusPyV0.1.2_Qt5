@@ -1,5 +1,7 @@
-from graphicElement.nodeData.pythonNodes.nodeTypes import *
+from graphicElement.nodeData.pythonNodes.AbstractNodeData import *
 from graphicElement.nodeGraphics.abstractNodeGraphics import AbstractGraphicNode
+from graphicElement.nodeGraphics.plug import Plug
+from graphicElement.nodeGraphics.Connection import *
 import importlib
 
 
@@ -7,39 +9,38 @@ class AbstractNodeInterface:
     nodeGraphic: AbstractGraphicNode
     nodeData: AbstractNodeData
     hasConnection = False
-    nodeCounter = 0
 
     def __init__(self, className: str, *args, view, **kwargs):
+
         # Crea l'istanza del nodoData
         self.nodeData = self.createNode(className, *args, **kwargs)
         self.nodeData.interface = self
-        self.nodeData.name = className
         # Crea l'istanza del nodoGrafico
         self.nodeGraphic = AbstractGraphicNode(view, self)
         self.nodeGraphic.nodeData = self.nodeData
+        self.nodeGraphic.nodeInterface = self
         if 'value' in kwargs:
             self.nodeGraphic.setValue(kwargs['value'])
         self.createPlug()
 
     @property
     def title(self):
-        return self.nodeData.title
+        return str(self.nodeData.title)
 
     @title.setter
-    def title(self, _name=None):
-        self.nodeData.name = _name
+    def title(self, _name):
         self.nodeGraphic.setTitle(self.nodeData.title)
 
     def changeIndex(self, _index):
-        self.nodeData = _index
+        self.nodeData.index = _index
+        self.nodeGraphic.setTitle(self.nodeData.title)
 
     def createPlug(self):
-        if self.nodeData.inPlugs is not None:
-            numInputs = len(self.nodeData.inPlugs)
-            self.nodeGraphic.createPlugsIn(numInputs)
-        if self.nodeData.outPlugs is not None:
-            numOutputs = len(self.nodeData.outPlugs)
-            self.nodeGraphic.createPlugsOut(numOutputs)
+        numInputs = self.nodeData.numberOfInputPlugs
+        self.nodeGraphic.createPlugsIn(numInputs)
+
+        numOutputs = self.nodeData.numberOfOutputPlugs
+        self.nodeGraphic.createPlugsOut(numOutputs)
 
     @staticmethod
     def createNode(className: str, *args, **kwargs) -> AbstractNodeData:
@@ -52,7 +53,7 @@ class AbstractNodeInterface:
         :param kwargs:
         :return:
         """
-        module = importlib.import_module("graphicElement.nodeData.pythonNodes.nodeTypes")
+        module = importlib.import_module("graphicElement.nodeData.pythonNodes.AbstractNodeData")
         node_class = getattr(module, className)
         return node_class(*args, **kwargs)
 
@@ -78,11 +79,11 @@ class AbstractNodeInterface:
         self.nodeGraphic.setValue(value)
 
     def deleteNode(self):
-        for plug in self.nodeGraphic.inputPlugs:
+        for plug in self.nodeGraphic.graphicInputPlugs:
             if plug.connection is not None:
                 plug.connection.deleteConnection()
             else:
                 print("no connection")
-        for plug in self.nodeGraphic.outputPlugs:
+        for plug in self.nodeGraphic.graphicOutputPlugs:
             if plug.connection is not None:
                 plug.connection.deleteConnection()

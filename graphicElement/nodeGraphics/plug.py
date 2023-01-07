@@ -26,12 +26,12 @@ class Plug(QGraphicsItem):
         returnString = f"name: {self.name} not contains InPlugs or outPlugs"
         if "In" in self.name:
             returnString = f"name: {self.name}, index: {self.index}, " \
-                           f"value: {self.node.nodeData.inPlugs[self.index]} " \
-                           f"nodeParent {self.node.title}, connection: {self.connection}"
+                           f"value: {self.node.nodeData.dataInPlugs[self.index].value} " \
+                           f"nodeParent {self.node.nodeData.title}, connection: {self.connection}"
         elif "Out" in self.name:
             returnString = f"name: {self.name}, index: {self.index}, " \
-                           f"value: {self.node.nodeData.outPlugs[self.index]} " \
-                           f"nodeParent {self.node.title}, connection: {self.connection}"
+                           f"value: {self.node.nodeData.dataOutPlugs[self.index].value} " \
+                           f"nodeParent {self.node.nodeData.title}, connection: {self.connection}"
         return returnString
 
     def boundingRect(self):

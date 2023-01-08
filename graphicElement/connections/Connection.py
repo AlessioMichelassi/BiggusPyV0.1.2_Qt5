@@ -72,7 +72,7 @@ class Connection(QGraphicsItem):
         self.scene().removeItem(self)
 
     def updateGeometry(self):
-        # Aggiorna la posizione della connessione in base alla posizione dei plug di origine e di destinazione
+        # Aggiorna la posizione della connessione in base alla posizione dei plugs di origine e di destinazione
         self.setLine(QLineF(self.startPlug.scenePos(), self.endPlug.scenePos()))
 
     def boundingRect(self):

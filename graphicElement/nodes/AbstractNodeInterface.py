@@ -1,32 +1,24 @@
-from graphicElement.nodeData.pythonNodes.AbstractNodeData import *
-from graphicElement.nodeGraphics.abstractNodeGraphics import AbstractGraphicNode
-from graphicElement.nodeGraphics.plug import Plug
-from graphicElement.nodeGraphics.Connection import *
+from graphicElement.nodes.pythonNodes.pythonNodeData import *
+from graphicElement.nodes.AbstractNodeGraphics import AbstractNodeGraphic
 import importlib
 
-"""
-La classe AbstractNodeInterface é una sorta di "ponte" tra la parte grafica 
-e quella di dati di un nodo. Ha una proprietà nodeData di tipo AbstractNodeData 
-che rappresenta il nodo di dati, e una proprietà nodeGraphic di tipo AbstractGraphicNode 
-che rappresenta il nodo grafico.
 
-La classe AbstractNodeData, d'altra parte, é la classe base per tutti i nodi di dati. 
-Ha proprietà inPlugs e outPlugs, che sono liste di oggetti di tipo AbstractPlug, 
-e metodi per gestire le connessioni tra i nodi.
+class Observer:
+    def __init__(self):
+        self.observedNodesList = []
 
-La classe AbstractGraphicNode, infine, è la classe base per tutti i nodi grafici. 
-Ha una proprietà nodeData di tipo AbstractNodeData che rappresenta il nodo di dati associato, 
-e metodi per gestire l'interfaccia grafica del nodo.
+    def addObservedNode(self, node):
+        self.observedNodesList.append(node)
+        node.addObserver(self)
 
-Il metodo addNodeToTheScene della classe canvas viene chiamato quando viene creato un nuovo nodo. 
-Crea un'istanza di AbstractNodeInterface, imposta la posizione del nodo grafico e lo aggiunge 
-alla scena grafica. Inoltre, aggiunge l'istanza di AbstractNodeInterface alla lista nodesInTheScene.
-
-"""
+    def update(self):
+        print("observer in action")
+        for observed_node in self.observedNodesList:
+            observed_node.calculate()
 
 
 class AbstractNodeInterface:
-    nodeGraphic: AbstractGraphicNode
+    nodeGraphic: AbstractNodeGraphic
     nodeData: AbstractNodeData
     hasConnection = False
 
@@ -36,12 +28,13 @@ class AbstractNodeInterface:
         self.nodeData = self.createNode(className, *args, **kwargs)
         self.nodeData.interface = self
         # Crea l'istanza del nodoGrafico
-        self.nodeGraphic = AbstractGraphicNode(view, self)
+        self.nodeGraphic = AbstractNodeGraphic(view, self)
         self.nodeGraphic.nodeData = self.nodeData
         self.nodeGraphic.nodeInterface = self
         if 'value' in kwargs:
-            self.nodeGraphic.setValue(kwargs['value'])
+            self.nodeGraphic.setValueFromGraphics(kwargs['value'])
         self.createPlug()
+        self.observers = []
 
     @property
     def title(self):
@@ -73,22 +66,22 @@ class AbstractNodeInterface:
         :param kwargs:
         :return:
         """
-        module = importlib.import_module("graphicElement.nodeData.pythonNodes.AbstractNodeData")
+        module = importlib.import_module("graphicElement.nodes.pythonNodes.pythonNodeData")
         node_class = getattr(module, className)
         return node_class(*args, **kwargs)
 
     def connectPlug(self, startNode: AbstractNodeData, startPlug, endNode: AbstractNodeData, endPlug):
         startNode.connect(endNode, endPlug.index, startPlug.index)
 
-        print(f"debug print from connect inputIndex is {startPlug.index} outputIndex is {endPlug.index}")
+        # print(f"debug print from connect inputIndex is {startPlug.index} outputIndex is {endPlug.index}")
 
     def disconnectPlug(self, _startNode, startPlug, _endNode, endPlug):
         # sourcery skip: assign-if-exp
         startNode = _startNode
         endNode = _endNode
-        if type(_startNode) is AbstractNodeInterface or type(_startNode) is AbstractGraphicNode:
+        if type(_startNode) is AbstractNodeInterface or type(_startNode) is AbstractNodeGraphic:
             startNode = _startNode.nodeData
-        if type(_endNode) is AbstractNodeInterface or type(_endNode) is AbstractGraphicNode:
+        if type(_endNode) is AbstractNodeInterface or type(_endNode) is AbstractNodeGraphic:
             endNode = _endNode.nodeData
 
         startNode.disconnect(endNode, startPlug.index, endPlug.index)
@@ -96,14 +89,23 @@ class AbstractNodeInterface:
             value = startNode.txtValue
         else:
             value = None
-        self.nodeGraphic.setValue(value)
+        self.nodeGraphic.setValueFromGraphics(value)
 
     def deleteNode(self):
         for plug in self.nodeGraphic.graphicInputPlugs:
             if plug.connection is not None:
                 plug.connection.deleteConnection()
             else:
-                print("no connection")
+                print("no connections")
         for plug in self.nodeGraphic.graphicOutputPlugs:
             if plug.connection is not None:
                 plug.connection.deleteConnection()
+
+    def addObserver(self, node):
+        observer = Observer()
+        observer.addObservedNode(node)
+        self.observers.append(observer)
+
+    def notifyToObserver(self):
+        for observer in self.observers:
+            observer.update()

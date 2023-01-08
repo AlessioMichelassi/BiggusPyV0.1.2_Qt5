@@ -1,12 +1,4 @@
-import math
-from collections import OrderedDict
-
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-
-from graphicElement.nodeGraphics.abstractNodeGraphics import *
-from graphicElement.nodeInterface.AbstractNodeInterface import AbstractNodeInterface
+from graphicElement.nodes.AbstractNodeGraphics import *
 
 CANVAS_SCALE = 0.9
 CENTER_ON = (430, 340)
@@ -62,14 +54,14 @@ class graphicViewOverride(QGraphicsView):
         self.setRenderHints(QPainter.RenderHint.Antialiasing
                             | QPainter.RenderHint.TextAntialiasing | QPainter.RenderHint.SmoothPixmapTransform)
 
-        self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
-        self.setDragMode(QGraphicsView.RubberBandDrag)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
+        self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
 
     def wheelEvent(self, event):
         self.scaleScene(math.pow(2.0, -event.angleDelta().y() / 240.0))
@@ -121,7 +113,7 @@ class graphicViewOverride(QGraphicsView):
             :return: noyhing
         """
         self.selectedItem = self.getItemAtClick(event)
-        if isinstance(self.selectedItem, Plug):
+        if isinstance(self.selectedItem, plugGraphic):
             if event.modifiers() and Qt.KeyboardModifier.ControlModifier:
                 print(self.selectedItem)
             else:
@@ -129,7 +121,7 @@ class graphicViewOverride(QGraphicsView):
 
     # LEFT MOUSE OVERRIDES
     def createArrow(self, event):
-        # Crea una nuova freccia quando si clicca su un plug
+        # Crea una nuova freccia quando si clicca su un plugs
         self.isConnectingPlug = True
         self.tempArrow = Arrow(self.selectedItem, self.mapToScene(event.pos()))
         self.tempArrow.currentNode = self.selectedItem.parentItem()
@@ -138,7 +130,7 @@ class graphicViewOverride(QGraphicsView):
 
     def middleMouseButtonPress(self, event):
         self._middleMousePressed = True
-        self.setDragMode(QGraphicsView.NoDrag)
+        self.setDragMode(QGraphicsView.DragMode.NoDrag)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self._dragPos = event.pos()
         event.accept()
@@ -149,8 +141,7 @@ class graphicViewOverride(QGraphicsView):
 
     def leftMouseButtonRelease(self, event):
         item = self.getItemAtClick(event)
-        if self.isConnectingPlug and type(item) == Plug:
-            print("plug")
+        if self.isConnectingPlug and type(item) == plugGraphic:
             connection = self.tempArrow.establishConnection(item)
             connection.connect()
             self.scene().removeItem(self.tempArrow)
@@ -162,7 +153,7 @@ class graphicViewOverride(QGraphicsView):
 
     def middleMouseButtonRelease(self, event):
         self._middleMousePressed = False
-        self.setDragMode(QGraphicsView.RubberBandDrag)
+        self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
         self._isPanning = False
         self.setCursor(Qt.CursorShape.ArrowCursor)
         super().mouseReleaseEvent(event)
@@ -204,11 +195,11 @@ class graphicViewOverride(QGraphicsView):
             self._dragPos = event.pos()
             if modifier == Qt.KeyboardModifier.ControlModifier:
                 self._middleMousePressed = True
-                self.setDragMode(QGraphicsView.NoDrag)
+                self.setDragMode(QGraphicsView.DragMode.NoDrag)
                 self.setCursor(Qt.CursorShape.OpenHandCursor)
         elif modifier == Qt.KeyboardModifier.ControlModifier:
             self._middleMousePressed = False
-            self.setDragMode(QGraphicsView.RubberBandDrag)
+            self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
             self._isPanning = False
             self.setCursor(Qt.CursorShape.ArrowCursor)
 
@@ -276,14 +267,14 @@ class graphicViewOverride(QGraphicsView):
     #
     ####################################################
     def getItemAtClick(self, event):
-        """ ritorna l'oggetto selezionato cliccandoci sopra"""
+        """ Ritorna l'oggetto selezionato cliccandoci sopra"""
         pos = event.pos()
         return self.itemAt(pos)
 
     def deleteObject(self, obj):
         if isinstance(obj, Connection):
             obj.deleteConnection()
-        elif isinstance(obj, AbstractGraphicNode):
+        elif isinstance(obj, AbstractNodeGraphic):
             obj.nodeInterface.deleteNode()
             self.scene().removeItem(obj)
         else:

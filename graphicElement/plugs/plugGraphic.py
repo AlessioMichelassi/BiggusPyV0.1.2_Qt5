@@ -5,7 +5,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 
-class Plug(QGraphicsItem):
+class plugGraphic(QGraphicsItem):
     index = 0
 
     def __init__(self, name, diameter, parent=None):
@@ -19,6 +19,7 @@ class Plug(QGraphicsItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setZValue(1)
         self.connection = None
+        self.createTitleText()
 
     def __str__(self):
         self.node.nodeData.calculate()
@@ -34,11 +35,32 @@ class Plug(QGraphicsItem):
                            f"nodeParent {self.node.nodeData.title}, connection: {self.connection}"
         return returnString
 
+    def createTitleText(self):
+        font = QFont()
+        font.setPointSize(10)
+        self.txtTitle = QGraphicsTextItem(self)
+        self.txtTitle.setFont(font)
+        # self.txtTitle.setTextInteractionFlags(Qt.TextInteractionFlag.TextEditorInteraction)
+        self.txtTitle.setPlainText(self.name)
+        # Posiziona la label 20 pixel sopra il centro del nodo
+        self.txtTitle.setDefaultTextColor(Qt.GlobalColor.white)
+        self.defineTextPosition()
+        self.txtTitle.setZValue(2)
+
+    def defineTextPosition(self):
+        x = self.txtTitle.boundingRect().width()
+
+        if "In" in self.name:
+            x = (x * -1) - 5
+        elif "Out" in self.name:
+            x = 10
+        self.txtTitle.setPos(x, -10)
+
     def boundingRect(self):
         return self.boundingRectangle.normalized()
 
     def paint(self, painter, option, widget=None):
-        # Draw the plug
+        # Draw the plugs
         painter.setBrush(Qt.GlobalColor.white)
         if not self.isSelected():
             painter.setPen(Qt.GlobalColor.black)

@@ -1,10 +1,8 @@
-import math
-import sys
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from graphicElement.nodeGraphics.plug import Plug
-from graphicElement.nodeGraphics.Connection import *
+
+from graphicElement.plugs.plugGraphic import plugGraphic
+from graphicElement.connections.Connection import *
 
 
 class superText(QGraphicsTextItem):
@@ -16,7 +14,7 @@ class superText(QGraphicsTextItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)
 
     def setText(self, text):
-        self.parent.setValue(int(text))
+        self.parent.setValueFromGraphics(int(text))
 
     def eventFilter(self, obj, event):
         # Verifica se l'evento è una pressione del tasto Invio
@@ -54,9 +52,16 @@ class SuperQLineEdit(QGraphicsProxyWidget):
             print("Errore", "Il valore inserito non è un intero!")
 
 
-class AbstractGraphicNode(QGraphicsItem):
+class AbstractNodeGraphic(QGraphicsItem):
+    # NodeGraphic parameter
     width: int = 50
     height: int = 100
+
+    borderColorDefault = QColor(10, 120, 10)
+    borderColorSelect = QColor(255, 70, 10)
+    backGroundColor = QColor(10, 180, 40)
+
+    # NodeGraphics variable
     outputConnection = []
     nodeCounter = 0
     txtTitle: QGraphicsTextItem
@@ -109,9 +114,13 @@ class AbstractGraphicNode(QGraphicsItem):
         self.txtValue.setDefaultTextColor(Qt.GlobalColor.black)
         self.txtValue.setZValue(2)
 
-    def setValue(self, value):
+    def setValueFromGraphics(self, value):
         # sourcery skip: assign-if-exp, hoist-statement-from-if
         self.nodeData.dataInPlugs[0].value = int(value)
+        self.txtValue.setPlainText(str(value))
+
+    def updateTextValue(self):
+        value = self.nodeData.dataOutPlugs[0].value
         self.txtValue.setPlainText(str(value))
 
     def setTitle(self, text):
@@ -129,7 +138,7 @@ class AbstractGraphicNode(QGraphicsItem):
         else:
             y = (self.height // inNumber)
         for i in range(inNumber):
-            plug = Plug(f"In_{i}", 8, self)
+            plug = plugGraphic(f"In_{i}", 8, self)
             plug.index = i
             plug.setPos(QPointF(x, y))
             y += plug.diameter * 3
@@ -144,7 +153,7 @@ class AbstractGraphicNode(QGraphicsItem):
         else:
             y = (self.height // outNumber)
         for i in range(outNumber):
-            plug = Plug(f"Out_{i}", 8, self)
+            plug = plugGraphic(f"Out_{i}", 8, self)
             plug.index = i
             plug.setPos(QPointF(x, y))
             self.graphicOutputPlugs.append(plug)
@@ -156,9 +165,10 @@ class AbstractGraphicNode(QGraphicsItem):
     def paint(self, painter, option, widget=None):
         # Draw the node
         if not self.isSelected():
-            painter.setBrush(Qt.GlobalColor.green)
+            painter.setPen(self.borderColorDefault)
         else:
-            painter.setBrush(Qt.GlobalColor.red)
+            painter.setPen(self.borderColorSelect)
+        painter.setBrush(self.backGroundColor)
         painter.drawRoundedRect(self.boundingRect, 5, 5)
 
     def itemChange(self, change, value):
@@ -182,7 +192,8 @@ class AbstractGraphicNode(QGraphicsItem):
         if event.button() == Qt.MouseButton.LeftButton:
             # Imposta il flag "selezionato" a False
             self.setSelected(False)
-        # Chiamare la versione della superclasse del metodo mouseReleaseEvent per gestire gli altri tipi di pulsanti del mouse
+        # Chiamare la versione della superclasse del metodo mouseReleaseEvent
+        # per gestire gli altri tipi di pulsanti del mouse
         super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):

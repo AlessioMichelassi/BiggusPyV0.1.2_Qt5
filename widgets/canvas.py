@@ -1,7 +1,7 @@
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from graphicElement.nodeInterface.AbstractNodeInterface import *
+from graphicElement.nodes.AbstractNodeInterface import *
 from graphicEngine.graphicViewOverride import graphicViewOverride
 from graphicEngine.graphicsSceneOverride import graphicSceneOverride
 
@@ -69,11 +69,8 @@ class canvas(QWidget):
         nodeInterface.nodeGraphic.setPos(mousePos)
 
         for x in self.nodesInTheScene:
-            print(x.title)
             if nodeInterface.title == x.title:
-                index +=1
+                index += 1
                 nodeInterface.changeIndex(index)
-            else:
-                print(f"{nodeInterface.title} != {x.title}")
 
         self.nodesInTheScene.append(nodeInterface)

@@ -39,9 +39,12 @@ class canvas(QWidget):
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         contextMenu = QMenu(self)
-        contextMenu.addSection("Test")
-        testNode = contextMenu.addAction("abstract node")
+        contextMenu.addSection("VariableNode")
+        _stringNode = contextMenu.addAction("string node")
         _numberNode = contextMenu.addAction("number node")
+        _listNode = contextMenu.addAction("list node")
+        _dictNode = contextMenu.addAction("dictionary node")
+        contextMenu.addSeparator()
         _sumNode = contextMenu.addAction("sum Node")
         _productNode = contextMenu.addAction("product Node")
         _printNode = contextMenu.addAction("print Node")
@@ -49,18 +52,21 @@ class canvas(QWidget):
 
         _mousePosition = self.graphicView.mousePosition
         action = contextMenu.exec(self.mapToGlobal(event.pos()))
-
-        if action == testNode:
-            node_interface = AbstractNodeInterface("AbstractDataNode", view=self.graphicView)
-            self.addNodeToTheScene(node_interface, _mousePosition)
-        elif action == _numberNode:
-            node_interface = AbstractNodeInterface("NumberNode", value=10, view=self.graphicView)
-            self.addNodeToTheScene(node_interface, _mousePosition)
+        node_interface = AbstractNodeInterface("NumberNode", value=10, view=self.graphicView)
+        if action == _stringNode:
+            node_interface = AbstractNodeInterface("StringNode", value="Hello World!", view=self.graphicView)
+        elif action == _listNode:
+            node_interface = AbstractNodeInterface("ListNode", value="Hello World!", view=self.graphicView)
+        elif action == _dictNode:
+            node_interface = AbstractNodeInterface("DictNode", value="", view=self.graphicView)
         elif action == _sumNode:
             node_interface = AbstractNodeInterface("SumNode", view=self.graphicView)
-            self.addNodeToTheScene(node_interface, _mousePosition)
+        elif action == _productNode:
+            node_interface = AbstractNodeInterface("ProductNode", view=self.graphicView)
         elif action == _printNode:
             node_interface = AbstractNodeInterface("PrintNode", view=self.graphicView)
+
+        if node_interface:
             self.addNodeToTheScene(node_interface, _mousePosition)
 
     def addNodeToTheScene(self, nodeInterface, mousePos):

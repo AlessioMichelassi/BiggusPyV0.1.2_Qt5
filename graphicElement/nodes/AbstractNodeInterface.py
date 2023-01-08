@@ -25,8 +25,7 @@ class AbstractNodeInterface:
     def __init__(self, className: str, *args, view, **kwargs):
 
         # Crea l'istanza del nodoData
-        self.nodeData = self.createNode(className, *args, **kwargs)
-        self.nodeData.interface = self
+        self.nodeData = self.createNode(className, *args, _interface=self, **kwargs)
         # Crea l'istanza del nodoGrafico
         self.nodeGraphic = AbstractNodeGraphic(view, self)
         self.nodeGraphic.nodeData = self.nodeData
@@ -56,11 +55,12 @@ class AbstractNodeInterface:
         self.nodeGraphic.createPlugsOut(numOutputs)
 
     @staticmethod
-    def createNode(className: str, *args, **kwargs) -> AbstractNodeData:
+    def createNode(className: str, *args, _interface, **kwargs) -> AbstractNodeData:
         """
         Carica dinamicamente il modulo che contiene la classe del nodo
         Crea un'istanza della classe del nodo passando eventuali argomenti e keyword arguments
         Crea un'istanza della classe del nodo passando eventuali argomenti e keyword arguments
+        :param _interface:
         :param className: il nome della classe del nodeTypes ad Es: SumNode o ProductNode
         :param args:
         :param kwargs:
@@ -68,7 +68,7 @@ class AbstractNodeInterface:
         """
         module = importlib.import_module("graphicElement.nodes.pythonNodes.pythonNodeData")
         node_class = getattr(module, className)
-        return node_class(*args, **kwargs)
+        return node_class(*args, interface=_interface, **kwargs)
 
     def connectPlug(self, startNode: AbstractNodeData, startPlug, endNode: AbstractNodeData, endPlug):
         startNode.connect(endNode, endPlug.index, startPlug.index)

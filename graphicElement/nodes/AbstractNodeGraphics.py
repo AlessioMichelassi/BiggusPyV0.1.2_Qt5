@@ -116,7 +116,10 @@ class AbstractNodeGraphic(QGraphicsItem):
 
     def setValueFromGraphics(self, value):
         # sourcery skip: assign-if-exp, hoist-statement-from-if
-        self.nodeData.dataInPlugs[0].value = int(value)
+        if type(self.nodeData) == "NumberNode":
+            self.nodeData.dataInPlugs[0].value = int(value)
+        else:
+            self.nodeData.dataInPlugs[0].value = value
         self.txtValue.setPlainText(str(value))
 
     def updateTextValue(self):

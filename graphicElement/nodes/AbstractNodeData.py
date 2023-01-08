@@ -10,7 +10,7 @@ class AbstractNodeData:
     resetValue = None
     isDebugging = True
 
-    def __init__(self, numIn: int, numOuts: int, interface=None):
+    def __init__(self, numIn: int, numOuts: int, interface):
         self.name = "abstractDataNode"
         self.interface = interface
         self.numberOfInputPlugs = numIn
@@ -85,7 +85,6 @@ class AbstractNodeData:
             self.interface.notifyToObserver()
         except Exception as e:
             a = e
-
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         """

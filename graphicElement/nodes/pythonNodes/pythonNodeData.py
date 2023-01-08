@@ -12,8 +12,8 @@ from graphicElement.nodes.AbstractNodeData import AbstractNodeData
 
 class NumberNode(AbstractNodeData):
 
-    def __init__(self, value: Union[int, float]):
-        super().__init__(numIn=1, numOuts=1)
+    def __init__(self, value: Union[int, float], interface):
+        super().__init__(numIn=1, numOuts=1, interface=interface)
         self.name = "NumberNode"
         self.resetValue = value
         self.dataInPlugs = []
@@ -27,8 +27,8 @@ class NumberNode(AbstractNodeData):
 
 
 class SumNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(self, interface):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "SumNode"
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -41,8 +41,8 @@ class SumNode(AbstractNodeData):
 
 
 class ProductNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(self, interface):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "ProductNode"
         self.inPlugs = []
         self.outPlugs = []
@@ -55,8 +55,8 @@ class ProductNode(AbstractNodeData):
 
 
 class ExpNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(self, interface):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "ExponentialNode"
         self.inPlugs = []
         self.outPlugs = []
@@ -69,8 +69,8 @@ class ExpNode(AbstractNodeData):
 
 
 class DivisionNode(AbstractNodeData):
-    def __init__(self, isInteger=False):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(self,  interface, isInteger=False):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.isInteger = isInteger
         self.name = "DivisionNode"
         self.inPlugs = []
@@ -87,8 +87,8 @@ class DivisionNode(AbstractNodeData):
 
 
 class RemainderNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(selfisInteger=False,):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "ReminderNode"
         self.inPlugs = []
         self.outPlugs = []
@@ -107,33 +107,33 @@ class RemainderNode(AbstractNodeData):
 #
 
 class StringNode(AbstractNodeData):
-    def __init__(self, value: str):
-        super().__init__(numIn=0, numOuts=1)
+    def __init__(self, value: str, interface):
+        super().__init__(numIn=1, numOuts=1, interface=interface)
         self.name = "StringNode"
         self.resetValue = value
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int) -> Union[str]:
-        self.outPlugs[outIndex].value = self.inPlugs[0].value
-        return self.outPlugs[0].value
+        self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value
+        return self.dataOutPlugs[0].value
 
 
 class ListNode(AbstractNodeData):
-    def __init__(self, value: List[Union[int, float, str]]):
-        super().__init__(numIn=0, numOuts=1)
-        self.name = "StringNode"
+    def __init__(self, value: List[Union[int, float, str]], interface):
+        super().__init__(numIn=1, numOuts=1, interface=interface)
+        self.name = "ListNode"
         self.resetValue = value
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int) -> Union[str]:
-        self.outPlugs[outIndex].value = self.inPlugs[0].value
-        return self.outPlugs[0].value
+        self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value
+        return self.dataOutPlugs[0].value
 
 
 class DictNode(AbstractNodeData):
@@ -151,58 +151,63 @@ class DictNode(AbstractNodeData):
     In questo modo, il DictNode funzionerà come una sorta di "costruttore" di dizionari.
     """
 
-    def __init__(self):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(self, value: dict, interface):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "StringNode"
-        self.resetValue = {}
-        self.inPlugs = []
-        self.outPlugs = []
+        self.resetValue = ""
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int) -> Union[str]:
-        key = self.inPlugs[0].value
-        value = self.inPlugs[1].value
-        self.outPlugs[outIndex].value = {key: value}
-        return self.outPlugs[outIndex].value
+        key = self.dataInPlugs[0].value
+        value = self.dataInPlugs[1].value
+        self.dataOutPlugs[outIndex].value = {key: value}
+        return self.dataOutPlugs[outIndex].value
 
 
 class ConcatNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(self, interface):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "ConcatNode"
         self.resetValue = ""
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int) -> Union[str]:
-        returnValue = str(self.inPlugs[0].value) + str(self.inPlugs[1].value)
-        self.outPlugs[outIndex].value = returnValue
+        returnValue = str(self.dataInPlugs[0].value) + str(self.dataInPlugs[1].value)
+        self.dataOutPlugs[outIndex].value = returnValue
         return returnValue
 
 
 class ReplaceNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=3, numOuts=1)
+    def __init__(self, interface):
+        super().__init__(numIn=3, numOuts=1, interface=interface)
         self.name = "ReplaceNode"
         self.resetValue = ""
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int) -> Union[str]:
-        returnValue = str(self.inPlugs[0].value).replace(str(self.inPlugs[1].value), str(self.inPlugs[2].value))
-        self.outPlugs[outIndex].value = returnValue
+        returnValue = str(self.dataInPlugs[0].value).replace(str(self.dataInPlugs[1].value), str(self.dataInPlugs[2].value))
+        self.dataOutPlugs[outIndex].value = returnValue
         return returnValue
 
 
 class PrintNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=1, numOuts=0)
-        self.dataInPlugs[0].value = None
+    def __init__(self, interface):
+        super().__init__(numIn=1, numOuts=1, interface=interface)
+        self.name = "PrintNode"
+        self.resetValue = ""
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
+        self.createPlugs()
+        self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex):
         return self.dataInPlugs[0].value
@@ -219,8 +224,8 @@ class PrintNode(AbstractNodeData):
 
 
 class AndNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(self, interface):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "AndNode"
         self.resetValue = ""
         self.inPlugs = []
@@ -236,8 +241,8 @@ class AndNode(AbstractNodeData):
 
 
 class OrNode(AbstractNodeData):
-    def __init__(self):
-        super().__init__(numIn=2, numOuts=1)
+    def __init__(self, interface):
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "OrNode"
         self.resetValue = ""
         self.inPlugs = []
@@ -272,8 +277,8 @@ class IfNode(AbstractNodeData):
     "selettore" di valori, a seconda del risultato della condizione.
     """
 
-    def __init__(self):
-        super().__init__(numIn=3, numOuts=1)
+    def __init__(self, interface):
+        super().__init__(numIn=3, numOuts=1, interface=interface)
         self.name = "OrNode"
         self.resetValue = ""
         self.inPlugs = []
@@ -294,8 +299,8 @@ class IfNode(AbstractNodeData):
 
 
 class ForLoopNode(AbstractNodeData):
-    def __init__(self, start: int, end: int, step: int = 1):
-        super().__init__(numIn=1, numOuts=2)  # il nodo For Loop ha un solo ingresso e due uscite
+    def __init__(self, start: int, end: int, step: int, interface):
+        super().__init__(numIn=1, numOuts=2, interface=interface) # il nodo For Loop ha un solo ingresso e due uscite
         self.name = "ForLoopNode"
         self.start = start
         self.end = end

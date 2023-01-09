@@ -147,7 +147,7 @@ class AbstractNodeGraphic(QGraphicsItem):
         else:
             y = (self.height // inNumber)
         for i in range(inNumber):
-            plug = self.nodeInterface.nodeData.dataInPlugs[i].createPlug("In", i, self)
+            plug = self.nodeInterface.nodeData.dataInPlugs[i].createPlug("In", self)
             plug.index = i
             plug.setPos(QPointF(x, y))
             y += plug.diameter * 3
@@ -162,11 +162,42 @@ class AbstractNodeGraphic(QGraphicsItem):
         else:
             y = (self.height // outNumber)
         for i in range(outNumber):
-            plug = self.nodeInterface.nodeData.dataInPlugs[i].createPlug("Out", i, self)
+            plug = self.nodeInterface.nodeData.dataOutPlugs[i].createPlug("Out", self)
             plug.index = i
             plug.setPos(QPointF(x, y))
             self.graphicOutputPlugs.append(plug)
             y += plug.diameter * 3
+
+    def redesign(self, width, height):
+        self.width = width
+        self.height = height
+        self.boundingRect = QRectF(0, 0, self.width, self.height)
+        x = (self.txtTitle.boundingRect().width() // 4)
+        self.txtTitle.setPos(x, -30)
+        inNumber = len(self.graphicInputPlugs)
+        x = -8
+        for plug in self.graphicInputPlugs:
+            if inNumber == 0:
+                return
+            elif inNumber == 1:
+                y = self.height // 2
+            else:
+                y = (self.height // inNumber)
+            plug.setPos(QPointF(x, y))
+            y += plug.diameter * 3
+
+        outNumber = len(self.graphicOutputPlugs)
+        x = self.width -2
+        for plug in self.graphicOutputPlugs:
+            if outNumber == 0:
+                return
+            elif outNumber == 1:
+                y = self.height // 2
+            else:
+                y = (self.height // outNumber)
+            plug.setPos(QPointF(x, y))
+            y += plug.diameter * 3
+
 
     def boundingRect(self):
         return self.boundingRect.normalized()

@@ -1,9 +1,31 @@
+import json
+
+from PyQt5.QtCore import QPointF
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from graphicElement.nodes.AbstractNodeInterface import *
 from graphicEngine.graphicViewOverride import graphicViewOverride
 from graphicEngine.graphicsSceneOverride import graphicSceneOverride
+
+"""
+La classe canvas contiene una serie di metodi che inizializzano l'interfaccia utente, gestiscono il menu 
+contestuale, aggiungono i nodi alla scena, salva e carica la scena e altre attività.
+
+Il metodo init viene chiamato quando viene creata un'istanza della classe canvas e si occupa di inizializzare 
+l'interfaccia utente chiamando il metodo initUI e di inizializzare alcune variabili d'istanza.
+
+Il metodo initUI crea la scena grafica e la visuale grafica, imposta il widget graphicView come widget centrale del 
+layout principale e imposta le dimensioni e il titolo della finestra.
+
+Il metodo contextMenuEvent gestisce il menu contestuale che viene visualizzato quando l'utente fa clic con il tasto 
+destro del mouse sulla scena. Al momento permette di inserire i nodi nella scena nel punto della scena 
+dove si clicca con il tasto destro.
+
+Il metodo addNodeToTheScene aggiunge un nodo alla scena e lo posiziona nella posizione del mouse.
+
+I metodi saveScene e serialize serializzano la scena e i nodi in essa contenuti in un formato che può essere salvato 
+su disco e successivamente caricato"""
 
 
 class canvas(QWidget):
@@ -13,6 +35,7 @@ class canvas(QWidget):
     filename = "untitled"
     sceneWidth = 5000
     sceneHeight = 5000
+    name = "untitled"
     isDebugActive = False
 
     def __init__(self, parent=None):
@@ -52,8 +75,10 @@ class canvas(QWidget):
 
         _mousePosition = self.graphicView.mousePosition
         action = contextMenu.exec(self.mapToGlobal(event.pos()))
-        node_interface = AbstractNodeInterface("NumberNode", value=10, view=self.graphicView)
-        if action == _stringNode:
+        node_interface = None
+        if action == _numberNode:
+            node_interface = AbstractNodeInterface("NumberNode", value=10, view=self.graphicView)
+        elif action == _stringNode:
             node_interface = AbstractNodeInterface("StringNode", value="Hello World!", view=self.graphicView)
         elif action == _listNode:
             node_interface = AbstractNodeInterface("ListNode", value="Hello World!", view=self.graphicView)
@@ -65,7 +90,8 @@ class canvas(QWidget):
             node_interface = AbstractNodeInterface("ProductNode", view=self.graphicView)
         elif action == _printNode:
             node_interface = AbstractNodeInterface("PrintNode", view=self.graphicView)
-
+        else:
+            pass
         if node_interface:
             self.addNodeToTheScene(node_interface, _mousePosition)
 
@@ -80,3 +106,39 @@ class canvas(QWidget):
                 nodeInterface.changeIndex(index)
 
         self.nodesInTheScene.append(nodeInterface)
+
+    def saveScene(self):
+        return self.serialize()
+
+    def serialize(self):
+        listOfDictionarySerialized = []
+        for node in self.nodesInTheScene:
+            listOfDictionarySerialized.append(node.serialize())
+
+        dicts = OrderedDict([
+            ('name', self.name),
+            ('sceneWidth', self.sceneWidth),
+            ('sceneHeight', self.sceneHeight),
+            ('Nodes', listOfDictionarySerialized)])
+        return json.dumps(dicts)
+
+    def deserialize(self, serializedString):
+        deserialized = json.loads(serializedString)
+        self.name = deserialized['name']
+        self.sceneWidth = deserialized['sceneWidth']
+        self.sceneHeight = deserialized['sceneHeight']
+        nodes = deserialized['Nodes']
+        for node in nodes:
+            self.deserializeNode(node)
+
+    def deserializeNode(self, serializedJsonDictionary):
+        deserialized = json.loads(serializedJsonDictionary)
+        _name = deserialized["name"]
+        _index = deserialized["index"]
+        _type = deserialized["type"]
+        _pos = deserialized["pos"]
+        _inPlugsNumb = deserialized["inPlugsNumb"]
+        _outPlugsNumb = deserialized["outPlugsNumb"]
+        node = AbstractNodeInterface(_type, value=10, view=self.graphicView)
+        pos = QPointF(float(_pos[0]), float(_pos[1]))
+        self.addNodeToTheScene(node, pos)

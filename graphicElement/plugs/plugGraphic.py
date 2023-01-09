@@ -9,10 +9,9 @@ class plugGraphic(QGraphicsItem):
     index = 0
     txtTitle: QGraphicsTextItem
 
-    def __init__(self, name, diameter, parent, plugInterface):
+    def __init__(self, plugInterface, diameter=8, parent=None):
         super().__init__(parent)
         self.diameter = diameter
-        self.name = name
         self.plugInterface = plugInterface
         self.nodeInterface = parent
         self.boundingRectangle = QRectF(-self.diameter // 2, -self.diameter // 2, self.diameter * 2, self.diameter * 2)
@@ -23,18 +22,16 @@ class plugGraphic(QGraphicsItem):
         self.connection = None
         self.createTitleText()
 
+    @property
+    def name(self):
+        return self.plugInterface.plugData.name
+
     def __str__(self):
         self.nodeInterface.nodeData.calculate()
         # sourcery skip: inline-immediately-returned-variable
-        returnString = f"name: {self.name} not contains InPlugs or outPlugs"
-        if "In" in self.name:
-            returnString = f"name: {self.name}, index: {self.index}, " \
-                           f"value: {self.nodeInterface.nodeData.dataInPlugs[self.index].value} " \
-                           f"nodeParent {self.nodeInterface.nodeData.title}, connection: {self.connection}"
-        elif "Out" in self.name:
-            returnString = f"name: {self.name}, index: {self.index}, " \
-                           f"value: {self.nodeInterface.nodeData.dataOutPlugs[self.index].value} " \
-                           f"nodeParent {self.nodeInterface.nodeData.title}, connection: {self.connection}"
+        returnString = f"name: {self.name}, index: {self.index}, " \
+                       f"value: {self.nodeInterface.nodeData.dataInPlugs[self.index].value} " \
+                       f"nodeParent {self.nodeInterface.nodeData.title}, connection: {self.plugInterface.connectedWith}"
         return returnString
 
     def createTitleText(self):
@@ -51,7 +48,6 @@ class plugGraphic(QGraphicsItem):
 
     def defineTextPosition(self):
         x = self.txtTitle.boundingRect().width()
-
         if "In" in self.name:
             x = (x * -1) - 5
         elif "Out" in self.name:

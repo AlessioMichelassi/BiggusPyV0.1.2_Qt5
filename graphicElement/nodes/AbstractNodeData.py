@@ -2,7 +2,35 @@ from typing import *
 
 from graphicElement.plugs.plugInterface import plugInterface
 
+"""
+La classe AbstractNodeData rappresenta l'interfaccia di base per la gestione dei dati di un nodo di un grafico. 
 
+La classe fornisce i seguenti metodi:
+
+    __init__: 
+                inizializza il nodo con il numero di plugs di input e output e l'interfaccia di input.
+    createPlugs: 
+                crea i plugs di input e output del nodo in base al numero specificato.
+    changeInputValue: 
+                modifica il valore di un plug di input specifico e chiama il metodo calculate per aggiornare 
+                il valore dei plugs di output del nodo.
+    calculate: aggiorna il valore dei plugs di output del nodo in base ai valori dei plugs di input.
+    notifyToObserver: 
+                notifica a tutti i nodi osservatori che il valore del nodo è cambiato, in modo da permettergli 
+                di aggiornare i loro valori di conseguenza.
+
+Inoltre, la classe definisce le seguenti variabili di istanza:
+
+    index: indice del nodo.
+    dataInPlugs: lista di plugs di input del nodo.
+    dataOutPlugs: lista di plugs di output del nodo.
+    resetValue: valore di reset del nodo.
+    isDebugging: indica se il nodo è in modalità debug.
+    name: nome del nodo.
+    interface: interfaccia di input del nodo.
+    numberOfInputPlugs: numero di plugs di input del nodo.
+    numberOfOutputPlugs: numero di plugs di output del nodo.
+"""
 class AbstractNodeData:
     index = 0
     dataInPlugs: list[plugInterface] = []
@@ -24,10 +52,10 @@ class AbstractNodeData:
 
     def createPlugs(self):
         for i in range(self.numberOfInputPlugs):
-            plugIn = plugInterface("In_", i, self)
+            plugIn = plugInterface("In", i, self)
             self.dataInPlugs.append(plugIn)
         for i in range(self.numberOfOutputPlugs):
-            plugOut = plugInterface("Out_", i, self)
+            plugOut = plugInterface("Out", i, self)
             self.dataOutPlugs.append(plugOut)
 
     def __str__(self):
@@ -116,10 +144,17 @@ class AbstractNodeData:
         node.changeInputValue(inIndex, value)
 
         # put the plug object in self.connectWith of plugData class
-        node.dataInPlugs[inIndex].connectedWith=self.dataOutPlugs[outIndex]
+        node.dataInPlugs[inIndex].connectedWith = self.dataOutPlugs[outIndex]
         self.dataOutPlugs[outIndex].connectedWith = node.dataInPlugs[outIndex]
 
     def disconnect(self, node: "AbstractNodeData", input_index: int, output_index: int):
         node.dataInPlugs[input_index].value = node.dataInPlugs[input_index].plugData.resetValue
 
-
+    def redefineGraphics(self):
+        """
+        La parte grafica del nodo viene creata dopo la parte dati, utilizzando
+        le loro classi astratte. Per ridefinire la grafica al momento, modificando solo
+        la parte dati, si può fare l'override di questa classe che verrà chiamata in automatico.
+        :return:
+        """
+        pass

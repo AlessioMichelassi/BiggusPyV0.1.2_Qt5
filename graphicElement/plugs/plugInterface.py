@@ -8,9 +8,18 @@ class plugInterface:
     def __init__(self, name, index, nodeData: 'AbstractNodeData', diameter=8):
         self.nodeInterface = nodeData.interface
         self.nodeData = nodeData
-        self.name = name
-        self.plugData = plugData(index, name, 0, self.nodeInterface)
+        self.plugData = plugData(index, name, 0, self.nodeInterface, self)
+
         self.plugGraphic = None
+        self.connection = None
+
+    @property
+    def name(self):
+        return self.plugData.name
+
+    @name.setter
+    def name(self, _name):
+        self.plugData.name = _name
 
     @property
     def resetValue(self):
@@ -33,14 +42,10 @@ class plugInterface:
         self.plugData.connectedWith = plug
 
     def disconnect(self):
-        self.connectedWith = None
+        self.connection = None
+        self.plugData.connectedWith = None
         self.plugData.value = self.resetValue
 
-    def createPlug(self, _type: str, index: int, graphicNode, diameter =8):
-
-        if _type in {"in", "In", "IN"}:
-            self.plugGraphic = plugGraphic(f"In_{index}", diameter, graphicNode, self)
-        elif _type in {"out", "Out", "OUT"}:
-            self.plugGraphic = plugGraphic(f"Out_{index}", diameter, graphicNode, self)
-
+    def createPlug(self, _type: str, graphicNode):
+        self.plugGraphic = plugGraphic(self, parent=graphicNode)
         return self.plugGraphic

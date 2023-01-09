@@ -2,9 +2,22 @@ from PyQt5.QtWidgets import *
 
 from widgets.canvas import canvas
 
+"""
+La classe MainWindow contiene una serie di metodi che inizializzano l'interfaccia utente, creano la barra di stato, 
+inizializzano il menù e altre attività.
 
+Il metodo init viene chiamato quando viene creata un'istanza della classe MainWindow e si occupa di inizializzare 
+l'interfaccia utente chiamando il metodo initUI e di creare la barra di stato chiamando il metodo createStatusBar.
+
+Il metodo initUI imposta il titolo e le dimensioni della finestra, imposta il widget canvas come widget centrale 
+della finestra e imposta l'icona della finestra.
+
+Il metodo createStatusBar crea la barra di stato e aggiunge un widget QLabel che mostra la posizione del mouse 
+nella scena del canvas.
+
+Il metodo initMenu crea il menù della finestra e aggiunge alcune azioni al menù File e al menù Modifica.
+"""
 class MainWindow(QMainWindow):
-
     canvas: canvas
     statusMousePosition: QLabel
     filename = "untitled"
@@ -41,12 +54,33 @@ class MainWindow(QMainWindow):
         editMenu = menubar.addMenu('Edit')
 
         # Aggiungi un'azione al menù File
+        openAction = QAction('open', self)
+        saveAction = QAction('save', self)
         exitAction = QAction('Quit', self)
         exitAction.setShortcut('Ctrl+Q')
+
+        openAction.triggered.connect(self.open)
+        saveAction.triggered.connect(self.save)
         exitAction.triggered.connect(qApp.quit)
+
+        fileMenu.addAction(openAction)
+        fileMenu.addAction(saveAction)
         fileMenu.addAction(exitAction)
 
         # Aggiungi un'azione al menù Modifica
         cutAction = QAction('Cut', self)
         cutAction.setShortcut('Ctrl+X')
         editMenu.addAction(cutAction)
+
+    def save(self):
+        data = self.canvas.saveScene()
+        with open("testSave.txt", "w+") as f:
+            f.write(data)
+
+    def open(self):
+        self.canvas.graphicScene.clear()
+        data = ""
+        with open("testSave.txt", "r") as f:
+            data = f.read()
+
+        self.canvas.deserialize(data)

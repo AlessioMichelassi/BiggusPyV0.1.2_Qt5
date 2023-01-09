@@ -1,5 +1,22 @@
 from graphicElement.nodes.AbstractNodeGraphics import *
 
+"""La classe graphicViewOverride estende la classe QGraphicsView di PyQt5 e sovrascrive alcuni dei suoi metodi per 
+fornire funzionalità aggiuntive.
+
+Le principali funzionalità fornite dalla classe sono:
+
+    Trasformazione delle coordinate della scena in coordinate di visualizzazione e viceversa utilizzando i metodi 
+    mapToScene e mapFromScene. Modifica delle proprietà di rendering della vista utilizzando il metodo 
+    setRenderProperties. Gestione dello zoom utilizzando il metodo scaleScene. Gestione dei tasti premuti utilizzando 
+    il metodo checkKeyPressed. Gestione dei pulsanti del mouse premuti e rilasciati utilizzando i metodi 
+    leftMouseButtonPress, leftMouseButtonRelease, middleMouseButtonPress, middleMouseButtonRelease, 
+    rightMouseButtonPress e rightMouseButtonRelease. Gestione del movimento del mouse utilizzando il metodo 
+    mouseMoveEvent. Centraggio della vista su una posizione specifica utilizzando il metodo centerOn.
+
+Inoltre, la classe fornisce alcune variabili di istanza per gestire lo stato della vista, come la posizione del mouse, 
+i tasti premuti e i pulsanti del mouse premuti.
+"""
+
 CANVAS_SCALE = 0.9
 CENTER_ON = (430, 340)
 
@@ -285,17 +302,18 @@ class graphicViewOverride(QGraphicsView):
 
     def checkForPlugConnection(self, node):
         plugs = node.nodeData.dataInPlugs
-        print(plugs)
+        connections = []
+
         for plug in plugs:
-            if plug.plugData.connectedWith:
+            if plug.connectedWith:
+                if plug.connection not in connections:
+                    connections.append(plug.connection)
                 plug.disconnect()
-                self.scene().removeItem(plug.plugGraphic)
-            else:
-                print(f"{plug.plugData.connectedWith}")
         plugs = node.nodeData.dataOutPlugs
         for plug in plugs:
-            if plug.plugData.connectedWith is not None:
+            if plug.connectedWith:
+                if plug.connection not in connections:
+                    connections.append(plug.connection)
                 plug.disconnect()
-                self.scene().removeItem(plug.plugGraphic)
-            else:
-                print("no out plug")
+        for connection in connections:
+            self.scene().removeItem(connection)

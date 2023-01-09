@@ -120,6 +120,11 @@ class StringNode(AbstractNodeData):
         self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value
         return self.dataOutPlugs[0].value
 
+    def redefineGraphics(self):
+        print("graphic redesign")
+        self.interface.nodeGraphic.redesign(180, 80)
+
+
 
 class ListNode(AbstractNodeData):
     def __init__(self, value: List[Union[int, float, str]], interface):

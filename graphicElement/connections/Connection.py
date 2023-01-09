@@ -8,14 +8,14 @@ from PyQt5.QtWidgets import *
 class Arrow(QGraphicsItem):
     currentNode = None
 
-    def __init__(self, startPlug, end_point, parent=None):
+    def __init__(self, startPlug: 'plugGraphic', end_point, parent=None):
         super().__init__(parent)
         self.startPlug = startPlug
         self.endPlug = None
         self.start_point = startPlug.scenePos()
         self.end_point = end_point
 
-    def setEndPoint(self, endPlug):
+    def setEndPoint(self, endPlug: 'plugGraphic'):
         self.endPlug = endPlug
         self.end_point = self.endPlug.scenePos()
         self.update()  # Aggiorna la visualizzazione della freccia
@@ -23,11 +23,14 @@ class Arrow(QGraphicsItem):
             self.currentNode.outputConnection.append(self)
             self.currentNode = None
 
-    def establishConnection(self, endPlug):
+    def establishConnection(self, endPlug: 'plugGraphic'):
         # Crea una nuova freccia
+
         conn = Connection(self.startPlug, endPlug)
         # Aggiungi la freccia alla scena
+        self.startPlug.plugInterface.connection = conn
         self.scene().addItem(conn)
+        endPlug.plugInterface.connection = conn
         return conn
 
     def updatePosition(self, pos):

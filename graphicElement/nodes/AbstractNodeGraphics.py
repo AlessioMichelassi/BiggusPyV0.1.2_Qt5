@@ -128,8 +128,11 @@ class AbstractNodeGraphic(QGraphicsItem):
 
     def setTitle(self, text):
         self.txtTitle.setPlainText(text)
-        x = (self.txtTitle.boundingRect().width()//3)
-        self.txtTitle.setPos(-x, -30)
+        textItemWidth = self.txtTitle.boundingRect().width()
+        textItemHeight = self.txtTitle.boundingRect().height()
+        x = (self.width - textItemWidth) / 2
+        y = (self.height - textItemHeight) / 2
+        self.txtTitle.setPos(x, -30)
 
     def createPlugsIn(self, inNumber):
         """
@@ -169,10 +172,19 @@ class AbstractNodeGraphic(QGraphicsItem):
             y += plug.diameter * 3
 
     def redesign(self, width, height):
+        """
+        Basandosi sulle nuove dimensioni del nodo ricalcola la posizione del
+        titolo e dei plug.
+        :param width:
+        :param height:
+        :return:
+        """
         self.width = width
         self.height = height
         self.boundingRect = QRectF(0, 0, self.width, self.height)
-        x = (self.txtTitle.boundingRect().width() // 4)
+        textItemWidth = self.txtTitle.boundingRect().width()
+        textItemHeight = self.txtTitle.boundingRect().height()
+        x = (self.width - textItemWidth) / 2
         self.txtTitle.setPos(x, -30)
         inNumber = len(self.graphicInputPlugs)
         x = -8

@@ -80,7 +80,7 @@ class AbstractNodeGraphic(QGraphicsItem):
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
         self.setZValue(1)
 
-        # Create the input and output plugs
+        # Create the input and output plugs list as emptyList
         self.graphicInputPlugs = []
         self.graphicOutputPlugs = []
 
@@ -209,7 +209,6 @@ class AbstractNodeGraphic(QGraphicsItem):
                 y = (self.height // outNumber)
             plug.setPos(QPointF(x, y))
             y += plug.diameter * 3
-
 
     def boundingRect(self):
         return self.boundingRect.normalized()

@@ -20,12 +20,12 @@ class Observer:
 class AbstractNodeInterface:
     nodeGraphic: AbstractNodeGraphic
     nodeData: AbstractNodeData
-    hasConnection = False
 
     def __init__(self, className: str, *args, view, **kwargs):
 
         # Crea l'istanza del nodoData
         self.nodeData = self.createNode(className, *args, _interface=self, **kwargs)
+        self.graphicView = view
         # Crea l'istanza del nodoGrafico
         self.nodeGraphic = AbstractNodeGraphic(view, self)
         self.nodeGraphic.nodeData = self.nodeData
@@ -72,8 +72,8 @@ class AbstractNodeInterface:
 
     def connectPlug(self, startNode: AbstractNodeData, startPlug, endNode: AbstractNodeData, endPlug):
         startNode.connect(endNode, endPlug.index, startPlug.index)
-
-        # print(f"debug print from connect inputIndex is {startPlug.index} outputIndex is {endPlug.index}")
+        endPlug.plugInterface.connectedWith = startPlug.plugInterface
+        startPlug.plugInterface.connectedWith = endPlug.plugInterface
 
     def disconnectPlug(self, _startNode, startPlug, _endNode, endPlug):
         # sourcery skip: assign-if-exp
@@ -85,21 +85,8 @@ class AbstractNodeInterface:
             endNode = _endNode.nodeData
 
         startNode.disconnect(endNode, startPlug.index, endPlug.index)
-        if startNode.hasAValue:
-            value = startNode.txtValue
-        else:
-            value = None
+        value = startNode.resetValue
         self.nodeGraphic.setValueFromGraphics(value)
-
-    def deleteNode(self):
-        for plug in self.nodeGraphic.graphicInputPlugs:
-            if plug.connection is not None:
-                plug.connection.deleteConnection()
-            else:
-                print("no connections")
-        for plug in self.nodeGraphic.graphicOutputPlugs:
-            if plug.connection is not None:
-                plug.connection.deleteConnection()
 
     def addObserver(self, node):
         observer = Observer()

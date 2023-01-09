@@ -132,6 +132,12 @@ class AbstractNodeGraphic(QGraphicsItem):
         self.txtTitle.setPos(-x, -30)
 
     def createPlugsIn(self, inNumber):
+        """
+        La parte grafica dei Plug viene definita qui perchè
+        varia in base alle dimensioni del nodo.
+        :param inNumber:
+        :return:
+        """
         # Create the input and output plugs
         x = -8
         if inNumber == 0:
@@ -141,7 +147,7 @@ class AbstractNodeGraphic(QGraphicsItem):
         else:
             y = (self.height // inNumber)
         for i in range(inNumber):
-            plug = plugGraphic(f"In_{i}", 8, self)
+            plug = self.nodeInterface.nodeData.dataInPlugs[i].createPlug("In", i, self)
             plug.index = i
             plug.setPos(QPointF(x, y))
             y += plug.diameter * 3
@@ -156,7 +162,7 @@ class AbstractNodeGraphic(QGraphicsItem):
         else:
             y = (self.height // outNumber)
         for i in range(outNumber):
-            plug = plugGraphic(f"Out_{i}", 8, self)
+            plug = self.nodeInterface.nodeData.dataInPlugs[i].createPlug("Out", i, self)
             plug.index = i
             plug.setPos(QPointF(x, y))
             self.graphicOutputPlugs.append(plug)

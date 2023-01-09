@@ -115,5 +115,11 @@ class AbstractNodeData:
         value = self.dataOutPlugs[outIndex].value
         node.changeInputValue(inIndex, value)
 
+        # put the plug object in self.connectWith of plugData class
+        node.dataInPlugs[inIndex].connectedWith=self.dataOutPlugs[outIndex]
+        self.dataOutPlugs[outIndex].connectedWith = node.dataInPlugs[outIndex]
+
     def disconnect(self, node: "AbstractNodeData", input_index: int, output_index: int):
-        node.dataInPlugs[input_index] = self.resetValue
+        node.dataInPlugs[input_index].value = node.dataInPlugs[input_index].plugData.resetValue
+
+

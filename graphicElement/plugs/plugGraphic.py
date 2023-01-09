@@ -7,12 +7,14 @@ from PyQt5.QtWidgets import *
 
 class plugGraphic(QGraphicsItem):
     index = 0
+    txtTitle: QGraphicsTextItem
 
-    def __init__(self, name, diameter, parent=None):
+    def __init__(self, name, diameter, parent, plugInterface):
         super().__init__(parent)
         self.diameter = diameter
         self.name = name
-        self.node = parent
+        self.plugInterface = plugInterface
+        self.nodeInterface = parent
         self.boundingRectangle = QRectF(-self.diameter // 2, -self.diameter // 2, self.diameter * 2, self.diameter * 2)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
@@ -22,17 +24,17 @@ class plugGraphic(QGraphicsItem):
         self.createTitleText()
 
     def __str__(self):
-        self.node.nodeData.calculate()
+        self.nodeInterface.nodeData.calculate()
         # sourcery skip: inline-immediately-returned-variable
         returnString = f"name: {self.name} not contains InPlugs or outPlugs"
         if "In" in self.name:
             returnString = f"name: {self.name}, index: {self.index}, " \
-                           f"value: {self.node.nodeData.dataInPlugs[self.index].value} " \
-                           f"nodeParent {self.node.nodeData.title}, connection: {self.connection}"
+                           f"value: {self.nodeInterface.nodeData.dataInPlugs[self.index].value} " \
+                           f"nodeParent {self.nodeInterface.nodeData.title}, connection: {self.connection}"
         elif "Out" in self.name:
             returnString = f"name: {self.name}, index: {self.index}, " \
-                           f"value: {self.node.nodeData.dataOutPlugs[self.index].value} " \
-                           f"nodeParent {self.node.nodeData.title}, connection: {self.connection}"
+                           f"value: {self.nodeInterface.nodeData.dataOutPlugs[self.index].value} " \
+                           f"nodeParent {self.nodeInterface.nodeData.title}, connection: {self.connection}"
         return returnString
 
     def createTitleText(self):

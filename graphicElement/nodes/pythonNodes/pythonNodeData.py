@@ -69,7 +69,7 @@ class ExpNode(AbstractNodeData):
 
 
 class DivisionNode(AbstractNodeData):
-    def __init__(self,  interface, isInteger=False):
+    def __init__(self, isInteger=False,  interface=None):
         super().__init__(numIn=2, numOuts=1, interface=interface)
         self.isInteger = isInteger
         self.name = "DivisionNode"
@@ -87,7 +87,7 @@ class DivisionNode(AbstractNodeData):
 
 
 class RemainderNode(AbstractNodeData):
-    def __init__(selfisInteger=False,):
+    def __init__(self, isInteger=False,  interface=None):
         super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "ReminderNode"
         self.inPlugs = []
@@ -299,7 +299,7 @@ class IfNode(AbstractNodeData):
 
 
 class ForLoopNode(AbstractNodeData):
-    def __init__(self, start: int, end: int, step: int, interface):
+    def __init__(self, start: int, end: int, step: int=1,  interface=None):
         super().__init__(numIn=1, numOuts=2, interface=interface) # il nodo For Loop ha un solo ingresso e due uscite
         self.name = "ForLoopNode"
         self.start = start

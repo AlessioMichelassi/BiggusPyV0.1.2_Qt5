@@ -108,7 +108,7 @@ class graphicViewOverride(QGraphicsView):
 
     def leftMouseButtonPress(self, event):
         """
-            nel caso in cui si prema CTRL+ LeftMB si può fare il pan della scena
+            Nel caso in cui si prema CTRL+ LeftMB si può fare il pan della scena
             :param event: default mouse event
             :return: noyhing
         """
@@ -163,7 +163,7 @@ class graphicViewOverride(QGraphicsView):
 
     def mouseMove(self, event):
         """
-        il pan della scena può avvenire o tenendo premuta la rotella
+        Il pan della scena può avvenire o tenendo premuta la rotella
         oppure premendo CTRL+click sinistro
         :param event:
         :return:
@@ -273,9 +273,29 @@ class graphicViewOverride(QGraphicsView):
 
     def deleteObject(self, obj):
         if isinstance(obj, Connection):
-            obj.deleteConnection()
+            obj.startPlug.plugInterface.disconnect()
+            obj.endPlug.plugInterface.disconnect()
+            self.scene().removeItem(obj)
         elif isinstance(obj, AbstractNodeGraphic):
-            obj.nodeInterface.deleteNode()
+            self.checkForPlugConnection(obj)
+
             self.scene().removeItem(obj)
         else:
             return
+
+    def checkForPlugConnection(self, node):
+        plugs = node.nodeData.dataInPlugs
+        print(plugs)
+        for plug in plugs:
+            if plug.plugData.connectedWith:
+                plug.disconnect()
+                self.scene().removeItem(plug.plugGraphic)
+            else:
+                print(f"{plug.plugData.connectedWith}")
+        plugs = node.nodeData.dataOutPlugs
+        for plug in plugs:
+            if plug.plugData.connectedWith is not None:
+                plug.disconnect()
+                self.scene().removeItem(plug.plugGraphic)
+            else:
+                print("no out plug")

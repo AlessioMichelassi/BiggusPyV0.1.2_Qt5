@@ -60,15 +60,17 @@ class Connection(QGraphicsItem):
         return True
 
     def connect(self):
-        startNode = self.startPlug.node
+        startNode = self.startPlug.nodeInterface
         startNode.connection = startNode
-        endNode = self.endPlug.node
+        endNode = self.endPlug.nodeInterface
         endNode.connection = endNode
         startNode.nodeInterface.connectPlug(startNode.nodeData, self.startPlug, endNode.nodeData, self.endPlug)
 
     def deleteConnection(self):
-        self.startPlug.node.nodeInterface.disconnectPlug(self.startPlug.node.nodeData, self.startPlug, self.endPlug.node.nodeData, self.endPlug)
-        self.endPlug.node.nodeInterface.disconnectPlug(self.endPlug.node.nodeData, self.endPlug, self.startPlug.node.nodeData, self.startPlug, )
+        self.startPlug.nodeInterface.disconnectPlug(self.startPlug.nodeInterface.nodeData, self.startPlug,
+                                                    self.endPlug.nodeInterface.nodeData, self.endPlug)
+        self.endPlug.nodeInterface.disconnectPlug(self.endPlug.nodeInterface.nodeData, self.endPlug,
+                                                  self.startPlug.nodeInterface.nodeData, self.startPlug)
         self.scene().removeItem(self)
 
     def updateGeometry(self):
@@ -80,7 +82,7 @@ class Connection(QGraphicsItem):
 
     def paint(self, painter, _QStyleOptionGraphicsItem, widget=None):
         if not self.isSelected():
-            painter.setPen(QPen(Qt.darkGray, 2))
+            painter.setPen(QPen(QColor(0, 20, 20), 3))
         else:
-            painter.setPen(QPen(Qt.red, 3))
+            painter.setPen(QPen(QColor(250, 50, 50), 3))
         painter.drawLine(self.startPlug.scenePos(), self.endPlug.scenePos())

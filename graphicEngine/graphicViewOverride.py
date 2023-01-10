@@ -276,6 +276,8 @@ class graphicViewOverride(QGraphicsView):
             print("B pressed")
         elif key == Qt.Key.Key_Delete:
             self.deleteObject(self.selectedItem)
+        elif event.key() == Qt.Key_Tab:
+            print("Tab key pressed")
 
         elif event.modifiers() and Qt.KeyboardModifier.ControlModifier:
 

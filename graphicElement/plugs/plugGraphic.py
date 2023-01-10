@@ -13,7 +13,7 @@ class plugGraphic(QGraphicsItem):
         super().__init__(parent)
         self.diameter = diameter
         self.plugInterface = plugInterface
-        self.nodeInterface = parent
+        self.nodeGraphic = parent
         self.boundingRectangle = QRectF(-self.diameter // 2, -self.diameter // 2, self.diameter * 2, self.diameter * 2)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
@@ -27,11 +27,11 @@ class plugGraphic(QGraphicsItem):
         return self.plugInterface.plugData.name
 
     def __str__(self):
-        self.nodeInterface.nodeData.calculate()
+        self.nodeGraphic.nodeData.calculate()
         # sourcery skip: inline-immediately-returned-variable
         returnString = f"name: {self.name}, index: {self.index}, " \
-                       f"value: {self.nodeInterface.nodeData.dataInPlugs[self.index].value} " \
-                       f"nodeParent {self.nodeInterface.nodeData.title}, connection: {self.plugInterface.connectedWith}"
+                       f"value: {self.nodeGraphic.nodeData.dataInPlugs[self.index].value} " \
+                       f"nodeParent {self.nodeGraphic.nodeData.title}, connection: {self.plugInterface.connectedWith}"
         return returnString
 
     def createTitleText(self):

@@ -1,3 +1,4 @@
+import contextlib
 from typing import *
 
 from graphicElement.plugs.plugInterface import plugInterface
@@ -31,6 +32,8 @@ Inoltre, la classe definisce le seguenti variabili di istanza:
     numberOfInputPlugs: numero di plugs di input del nodo.
     numberOfOutputPlugs: numero di plugs di output del nodo.
 """
+
+
 class AbstractNodeData:
     index = 0
     dataInPlugs: list[plugInterface] = []
@@ -98,7 +101,11 @@ class AbstractNodeData:
                   f"{self.name} - changed Input value "
                   f"{self.dataInPlugs[inputIndex].name} "
                   f"= {self.dataInPlugs[inputIndex].value}")
-        self.calculate()
+        try:
+            self.calculate()
+            self.interface.notifyToObserver()
+        except Exception as e:
+            self.calculate()
 
     def calculate(self):
         """
@@ -106,13 +113,13 @@ class AbstractNodeData:
         chiamata quando si vuole calcolare il nuovo valore dei plugs di output del nodo.
         :return:
         """
-        for i, out_plug in enumerate(self.dataOutPlugs):
-            out_plug.value = self.calculateOutput(i)
-        try:
+        for i, outPlug in enumerate(self.dataOutPlugs):
+            outPlug.value = self.calculateOutput(i)
+            if outPlug.connectedWith:
+                outPlug.connection.endPlug.value = outPlug.value
+                outPlug.connection.endPlug.nodeGraphic.updateTextValue()
+        with contextlib.suppress(AttributeError):
             self.interface.nodeGraphic.updateTextValue()
-            self.interface.notifyToObserver()
-        except Exception as e:
-            a = e
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         """

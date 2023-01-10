@@ -1,3 +1,4 @@
+import contextlib
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
@@ -114,13 +115,15 @@ class AbstractNodeGraphic(QGraphicsItem):
         self.txtValue.setDefaultTextColor(Qt.GlobalColor.black)
         self.txtValue.setZValue(2)
 
-    def setValueFromGraphics(self, value):
+    def setValueFromGraphics(self, value, index:int = 0):
         # sourcery skip: assign-if-exp, hoist-statement-from-if
         if type(self.nodeData) == "NumberNode":
-            self.nodeData.dataInPlugs[0].value = int(value)
+            self.nodeData.dataInPlugs[index].value = int(value)
         else:
-            self.nodeData.dataInPlugs[0].value = value
+            self.nodeData.dataInPlugs[index].value = value
         self.txtValue.setPlainText(str(value))
+        with contextlib.suppress(AttributeError):
+            self.interface.notifyToObserver()
 
     def updateTextValue(self):
         value = self.nodeData.dataOutPlugs[0].value

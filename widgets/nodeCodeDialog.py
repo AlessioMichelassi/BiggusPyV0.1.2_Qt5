@@ -56,8 +56,8 @@ class nodeCodeEditorDialog(QDialog):
         print(self.lines)
 
     def OK(self):
-        self.parentItem.nodeInterface.name = self.txtInputName.text()
-        self.parentItem.nodeInterface.txtTitle = self.txtInputTitle.text()
+        self.parentItem.nodeGraphic.name = self.txtInputName.text()
+        self.parentItem.nodeGraphic.txtTitle = self.txtInputTitle.text()
         self.close()
 
     def loadSourceCode(self, _fileName):

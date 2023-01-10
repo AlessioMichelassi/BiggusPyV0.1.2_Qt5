@@ -36,7 +36,6 @@ class SumNode(AbstractNodeData):
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value + self.dataInPlugs[1].value
-        self.interface.notifyToObserver()
         return self.dataOutPlugs[outIndex].value
 
 
@@ -50,7 +49,6 @@ class ProductNode(AbstractNodeData):
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         self.outPlugs[outIndex].value = self.inPlugs[0].value * self.inPlugs[1].value
-        self.interface.notifyToObserver()
         return self.outPlugs[outIndex].value
 
 
@@ -64,7 +62,6 @@ class ExpNode(AbstractNodeData):
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         self.outPlugs[outIndex].value = self.inPlugs[0].value ** self.inPlugs[1].value
-        self.interface.notifyToObserver()
         return self.outPlugs[outIndex].value
 
 
@@ -82,7 +79,6 @@ class DivisionNode(AbstractNodeData):
             self.outPlugs[outIndex].value = self.inPlugs[0].value // self.inPlugs[1].value
         else:
             self.outPlugs[outIndex].value = self.inPlugs[0].value / self.inPlugs[1].value
-        self.interface.notifyToObserver()
         return self.outPlugs[outIndex].value
 
 
@@ -96,7 +92,6 @@ class RemainderNode(AbstractNodeData):
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         self.outPlugs[outIndex].value = self.inPlugs[0].value % self.inPlugs[1].value
-        self.interface.notifyToObserver()
         return self.outPlugs[outIndex].value
 
 

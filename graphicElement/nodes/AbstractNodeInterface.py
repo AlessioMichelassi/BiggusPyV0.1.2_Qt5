@@ -85,22 +85,26 @@ La classe implementa i seguenti metodi:
 
 
 class Observer:
-    def __init__(self):
-        self.observedNodesList = []
+    observedNodesList = []
+
+    def __init__(self, node):
+        self.mainNode = node
 
     def addObservedNode(self, node):
+        print(f"added node to observer: {node.title}")
         self.observedNodesList.append(node)
-        node.addObserver(self)
 
     def update(self):
-        print("observer in action")
+        print(f"updating from {self.mainNode.name}")
         for observed_node in self.observedNodesList:
+            observed_node.nodeData.calculate()
             observed_node.calculate()
 
 
 class AbstractNodeInterface:
     nodeGraphic: AbstractNodeGraphic
     nodeData: AbstractNodeData
+    observer: Observer
 
     def __init__(self, className: str, *args, view, **kwargs):
 
@@ -112,11 +116,12 @@ class AbstractNodeInterface:
         self.nodeGraphic = AbstractNodeGraphic(view, self)
         self.nodeGraphic.nodeData = self.nodeData
         self.nodeGraphic.nodeInterface = self
+        self.createPlug()
         if 'value' in kwargs:
             self.nodeGraphic.setValueFromGraphics(kwargs['value'])
-        self.createPlug()
+
         self.nodeData.redefineGraphics()
-        self.observers = []
+        self.observer = Observer(self)
 
     @property
     def title(self):
@@ -157,6 +162,7 @@ class AbstractNodeInterface:
         startNode.connect(endNode, endPlug.index, startPlug.index)
         endPlug.plugInterface.connectedWith = startPlug.plugInterface
         startPlug.plugInterface.connectedWith = endPlug.plugInterface
+        self.addObservedNode(startNode.interface)
 
     def disconnectPlug(self, _startNode, startPlug, _endNode, endPlug):
         # sourcery skip: assign-if-exp
@@ -171,14 +177,15 @@ class AbstractNodeInterface:
         value = startNode.resetValue
         self.nodeGraphic.setValueFromGraphics(value)
 
-    def addObserver(self, node):
-        observer = Observer()
-        observer.addObservedNode(node)
-        self.observers.append(observer)
+    def addObservedNode(self, node):
+        self.observer.addObservedNode(node)
 
     def notifyToObserver(self):
-        for observer in self.observers:
-            observer.update()
+        self.observer.update()
+
+    def updateValue(self, plug, value):
+        plug.value = value
+        plug.nodeGraphic.nodeGraphics.updateTextValue()
 
     def serialize(self):
         dicts = OrderedDict([

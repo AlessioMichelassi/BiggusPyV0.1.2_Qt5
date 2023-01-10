@@ -63,17 +63,17 @@ class Connection(QGraphicsItem):
         return True
 
     def connect(self):
-        startNode = self.startPlug.nodeInterface
+        startNode = self.startPlug.nodeGraphic
         startNode.connection = startNode
-        endNode = self.endPlug.nodeInterface
+        endNode = self.endPlug.nodeGraphic
         endNode.connection = endNode
         startNode.nodeInterface.connectPlug(startNode.nodeData, self.startPlug, endNode.nodeData, self.endPlug)
 
     def deleteConnection(self):
-        self.startPlug.nodeInterface.disconnectPlug(self.startPlug.nodeInterface.nodeData, self.startPlug,
-                                                    self.endPlug.nodeInterface.nodeData, self.endPlug)
-        self.endPlug.nodeInterface.disconnectPlug(self.endPlug.nodeInterface.nodeData, self.endPlug,
-                                                  self.startPlug.nodeInterface.nodeData, self.startPlug)
+        self.startPlug.nodeGraphic.disconnectPlug(self.startPlug.nodeGraphic.nodeData, self.startPlug,
+                                                  self.endPlug.nodeGraphic.nodeData, self.endPlug)
+        self.endPlug.nodeGraphic.disconnectPlug(self.endPlug.nodeGraphic.nodeData, self.endPlug,
+                                                self.startPlug.nodeGraphic.nodeData, self.startPlug)
         self.scene().removeItem(self)
 
     def updateGeometry(self):

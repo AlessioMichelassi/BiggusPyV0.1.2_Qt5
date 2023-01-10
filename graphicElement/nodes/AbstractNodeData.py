@@ -1,7 +1,7 @@
 import contextlib
 from typing import *
 
-from graphicElement.plugs.plugInterface import plugInterface
+from graphicElement.plugs.PlugData import PlugData
 
 """
 La classe AbstractNodeData rappresenta l'interfaccia di base per la gestione dei dati di un nodo di un grafico. 
@@ -36,18 +36,19 @@ Inoltre, la classe definisce le seguenti variabili di istanza:
 
 class AbstractNodeData:
     index = 0
-    dataInPlugs: list[plugInterface] = []
-    dataOutPlugs: list[plugInterface] = []
+    dataInPlugs: list[PlugData] = []
+    dataOutPlugs: list[PlugData] = []
     resetValue = None
     isDebugging = True
+    connection: list['Connection'] = []
 
     def __init__(self, numIn: int, numOuts: int, interface):
         self.name = "abstractDataNode"
-        self.interface = interface
+        self.nodeInterface = interface
         self.numberOfInputPlugs = numIn
         self.numberOfOutputPlugs = numOuts
-        self.dataInPlugs: list[plugInterface] = []
-        self.dataOutPlugs: list[plugInterface] = []
+        self.dataInPlugs: list[PlugData] = []
+        self.dataOutPlugs: list[PlugData] = []
 
     @property
     def title(self):
@@ -55,10 +56,10 @@ class AbstractNodeData:
 
     def createPlugs(self):
         for i in range(self.numberOfInputPlugs):
-            plugIn = plugInterface("In", i, self)
+            plugIn = PlugData(i, "In", 0, self)
             self.dataInPlugs.append(plugIn)
         for i in range(self.numberOfOutputPlugs):
-            plugOut = plugInterface("Out", i, self)
+            plugOut = PlugData(i, "Out", 0, self)
             self.dataOutPlugs.append(plugOut)
 
     def __str__(self):
@@ -67,13 +68,13 @@ class AbstractNodeData:
             returnString += f"{i.name} = {i.value} "
         for i in self.dataOutPlugs:
             returnString += f"{i.name} = {i.value} "
-        if self.interface is not None:
-            return f"{self.interface.name} InputNumber: {self.numberOfInputPlugs}, OutputNumber {self.numberOfOutputPlugs}"
+        if self.nodeInterface is not None:
+            return f"{self.nodeInterface.name} InputNumber: {self.numberOfInputPlugs}, OutputNumber {self.numberOfOutputPlugs}"
         else:
             return f"{returnString}: InPlugNumber: {self.numberOfInputPlugs}," \
                    f"OutPlugNumber {self.numberOfOutputPlugs}"
 
-    def changeInputValue(self, inputIndex, value):
+    def changeInputValue(self, inputIndex, value, boolean=True):
         """
         La funzione changeInputValue viene chiamata quando un plugs
         di input viene collegato a un altro plugs di output.
@@ -101,11 +102,12 @@ class AbstractNodeData:
                   f"{self.name} - changed Input value "
                   f"{self.dataInPlugs[inputIndex].name} "
                   f"= {self.dataInPlugs[inputIndex].value}")
-        try:
-            self.calculate()
-            self.interface.notifyToObserver()
-        except Exception as e:
-            self.calculate()
+        if boolean:
+            try:
+                self.calculate()
+                self.nodeInterface.notifyToObserver()
+            except Exception as e:
+                self.calculate()
 
     def calculate(self):
         """
@@ -113,13 +115,24 @@ class AbstractNodeData:
         chiamata quando si vuole calcolare il nuovo valore dei plugs di output del nodo.
         :return:
         """
+        returnString = f"{self.title} "
         for i, outPlug in enumerate(self.dataOutPlugs):
             outPlug.value = self.calculateOutput(i)
-            if outPlug.connectedWith:
-                outPlug.connection.endPlug.value = outPlug.value
-                outPlug.connection.endPlug.nodeGraphic.updateTextValue()
-        with contextlib.suppress(AttributeError):
-            self.interface.nodeGraphic.updateTextValue()
+            returnString += f"{outPlug.name} = {outPlug.value}"
+            if outPlug.connection:
+                print(f"{returnString} outPlug is connected!")
+                connection = outPlug.connection
+                print(f"connected Plug is: {connection.endPlug.plugData.name} = {connection.endPlug.plugData.value}")
+
+                endNode = outPlug.connection.endNode
+                print(endNode.title)
+
+                index = connection.endPlug.plugData.index
+                endNode.changeInputValue(index, outPlug.value, None)
+        try:
+            self.nodeInterface.nodeGraphic.updateTextValue()
+        except Exception as e:
+            print(e)
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         """
@@ -145,17 +158,6 @@ class AbstractNodeData:
         :return:
         """
         raise NotImplementedError()
-
-    def connect(self, node: "AbstractNodeData", inIndex: int, outIndex: int):
-        value = self.dataOutPlugs[outIndex].value
-        node.changeInputValue(inIndex, value)
-
-        # put the plug object in self.connectWith of plugData class
-        node.dataInPlugs[inIndex].connectedWith = self.dataOutPlugs[outIndex]
-        self.dataOutPlugs[outIndex].connectedWith = node.dataInPlugs[outIndex]
-
-    def disconnect(self, node: "AbstractNodeData", input_index: int, output_index: int):
-        node.dataInPlugs[input_index].value = node.dataInPlugs[input_index].plugData.resetValue
 
     def redefineGraphics(self):
         """

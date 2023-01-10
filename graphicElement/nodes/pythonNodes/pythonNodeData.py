@@ -30,6 +30,7 @@ class SumNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "SumNode"
+        self.resetValue = 0
         self.dataInPlugs = []
         self.dataOutPlugs = []
         self.createPlugs()
@@ -43,56 +44,57 @@ class ProductNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "ProductNode"
-        self.inPlugs = []
-        self.outPlugs = []
+        self.resetValue = 0
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
-        self.outPlugs[outIndex].value = self.inPlugs[0].value * self.inPlugs[1].value
-        return self.outPlugs[outIndex].value
+        self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value * self.dataInPlugs[1].value
+        return self.dataOutPlugs[outIndex].value
 
 
 class ExpNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "ExponentialNode"
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
-        self.outPlugs[outIndex].value = self.inPlugs[0].value ** self.inPlugs[1].value
-        return self.outPlugs[outIndex].value
+        self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value ** self.dataInPlugs[1].value
+        return self.dataOutPlugs[outIndex].value
 
 
 class DivisionNode(AbstractNodeData):
-    def __init__(self, isInteger=False,  interface=None):
+    def __init__(self, isInteger=False, interface=None):
         super().__init__(numIn=2, numOuts=1, interface=interface)
         self.isInteger = isInteger
         self.name = "DivisionNode"
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         if self.isInteger:
-            self.outPlugs[outIndex].value = self.inPlugs[0].value // self.inPlugs[1].value
+            self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value // self.dataInPlugs[1].value
         else:
-            self.outPlugs[outIndex].value = self.inPlugs[0].value / self.inPlugs[1].value
-        return self.outPlugs[outIndex].value
+            self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value / self.dataInPlugs[1].value
+        return self.dataOutPlugs[outIndex].value
 
 
 class RemainderNode(AbstractNodeData):
-    def __init__(self, isInteger=False,  interface=None):
+    def __init__(self, isInteger=False, interface=None):
         super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "ReminderNode"
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
-        self.outPlugs[outIndex].value = self.inPlugs[0].value % self.inPlugs[1].value
-        return self.outPlugs[outIndex].value
+        self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value % self.dataInPlugs[1].value
+        return self.dataOutPlugs[outIndex].value
 
 
 #####################################################
@@ -117,8 +119,7 @@ class StringNode(AbstractNodeData):
 
     def redefineGraphics(self):
         print("graphic redesign")
-        self.interface.nodeGraphic.redesign(180, 80)
-
+        self.nodeInterface.nodeGraphic.redesign(180, 80)
 
 
 class ListNode(AbstractNodeData):
@@ -194,7 +195,8 @@ class ReplaceNode(AbstractNodeData):
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int) -> Union[str]:
-        returnValue = str(self.dataInPlugs[0].value).replace(str(self.dataInPlugs[1].value), str(self.dataInPlugs[2].value))
+        returnValue = str(self.dataInPlugs[0].value).replace(str(self.dataInPlugs[1].value),
+                                                             str(self.dataInPlugs[2].value))
         self.dataOutPlugs[outIndex].value = returnValue
         return returnValue
 
@@ -299,8 +301,8 @@ class IfNode(AbstractNodeData):
 
 
 class ForLoopNode(AbstractNodeData):
-    def __init__(self, start: int, end: int, step: int=1,  interface=None):
-        super().__init__(numIn=1, numOuts=2, interface=interface) # il nodo For Loop ha un solo ingresso e due uscite
+    def __init__(self, start: int, end: int, step: int = 1, interface=None):
+        super().__init__(numIn=1, numOuts=2, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
         self.name = "ForLoopNode"
         self.start = start
         self.end = end

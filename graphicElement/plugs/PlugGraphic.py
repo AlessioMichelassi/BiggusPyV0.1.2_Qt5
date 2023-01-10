@@ -5,15 +5,15 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 
-class plugGraphic(QGraphicsItem):
+class PlugGraphic(QGraphicsItem):
     index = 0
     txtTitle: QGraphicsTextItem
 
-    def __init__(self, plugInterface, diameter=8, parent=None):
+    def __init__(self, plugData, diameter=8, parent=None):
         super().__init__(parent)
         self.diameter = diameter
-        self.plugInterface = plugInterface
-        self.nodeGraphic = parent
+        self.plugData = plugData
+        self.nodeGraphic: 'AbstractNodeGraphic' = parent
         self.boundingRectangle = QRectF(-self.diameter // 2, -self.diameter // 2, self.diameter * 2, self.diameter * 2)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
@@ -24,14 +24,14 @@ class plugGraphic(QGraphicsItem):
 
     @property
     def name(self):
-        return self.plugInterface.plugData.name
+        return self.plugData.name
 
     def __str__(self):
         self.nodeGraphic.nodeData.calculate()
         # sourcery skip: inline-immediately-returned-variable
-        returnString = f"name: {self.name}, index: {self.index}, " \
-                       f"value: {self.nodeGraphic.nodeData.dataInPlugs[self.index].value} " \
-                       f"nodeParent {self.nodeGraphic.nodeData.title}, connection: {self.plugInterface.connectedWith}"
+        returnString = f"name: {self.name}, index: {self.index}, value: " \
+                       f"{self.nodeGraphic.nodeData.dataInPlugs[self.index].value} " \
+                       f"from {self.nodeGraphic.nodeData.title}, connection: {self.plugData.connectedWith}"
         return returnString
 
     def createTitleText(self):

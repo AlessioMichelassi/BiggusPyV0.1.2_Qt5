@@ -8,14 +8,14 @@ from PyQt5.QtWidgets import *
 class Arrow(QGraphicsItem):
     currentNode = None
 
-    def __init__(self, startPlug: 'plugGraphic', end_point, parent=None):
+    def __init__(self, startPlug: 'PlugGraphic', end_point, parent=None):
         super().__init__(parent)
         self.startPlug = startPlug
         self.endPlug = None
         self.start_point = startPlug.scenePos()
         self.end_point = end_point
 
-    def setEndPoint(self, endPlug: 'plugGraphic'):
+    def setEndPoint(self, endPlug: 'PlugGraphic'):
         self.endPlug = endPlug
         self.end_point = self.endPlug.scenePos()
         self.update()  # Aggiorna la visualizzazione della freccia
@@ -23,14 +23,11 @@ class Arrow(QGraphicsItem):
             self.currentNode.outputConnection.append(self)
             self.currentNode = None
 
-    def establishConnection(self, endPlug: 'plugGraphic'):
+    def establishConnection(self, endPlug: 'PlugGraphic'):
         # Crea una nuova freccia
-
         conn = Connection(self.startPlug, endPlug)
         # Aggiungi la freccia alla scena
-        self.startPlug.plugInterface.connection = conn
         self.scene().addItem(conn)
-        endPlug.plugInterface.connection = conn
         return conn
 
     def updatePosition(self, pos):
@@ -53,8 +50,16 @@ class Arrow(QGraphicsItem):
 class Connection(QGraphicsItem):
     def __init__(self, _startPlug, _endPlug, parent=None):
         super().__init__(parent)
-        self.startPlug = _startPlug
-        self.endPlug = _endPlug
+        if "Out" in _startPlug.plugData.name:
+            self.startPlug = _startPlug
+            self.startNode = self.startPlug.nodeGraphic.nodeData
+            self.endPlug = _endPlug
+            self.endNode = self.endPlug.nodeGraphic.nodeData
+        elif "In" in _startPlug.plugData.name:
+            self.startPlug = _endPlug
+            self.startNode = self.startPlug.nodeGraphic.nodeData
+            self.endPlug = _startPlug
+            self.endNode = self.endPlug.nodeGraphic.nodeData
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setZValue(-1)
         self.connect()
@@ -64,10 +69,8 @@ class Connection(QGraphicsItem):
 
     def connect(self):
         startNode = self.startPlug.nodeGraphic
-        startNode.connection = startNode
         endNode = self.endPlug.nodeGraphic
-        endNode.connection = endNode
-        startNode.nodeInterface.connectPlug(startNode.nodeData, self.startPlug, endNode.nodeData, self.endPlug)
+        startNode.nodeInterface.connectPlug(startNode.nodeData, self.startPlug, endNode.nodeData, self.endPlug, self)
 
     def deleteConnection(self):
         self.startPlug.nodeGraphic.disconnectPlug(self.startPlug.nodeGraphic.nodeData, self.startPlug,

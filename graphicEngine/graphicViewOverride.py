@@ -22,13 +22,12 @@ CENTER_ON = (430, 340)
 
 
 class graphicViewOverride(QGraphicsView):
-
     scenePosChanged = pyqtSignal(int, int)
 
     # MOUSE BUTTON OVERRIDES VARIABLE
     lastMousePosition: QPointF = QPointF(0, 0)
-    lastRightClickMousePosition: QPointF = QPointF(0, 0)
-    lastLeftMouseBtnClickScenePos: QPointF = QPointF(0, 0)
+    lastRightMouseBtnClickPosition: QPointF = QPointF(0, 0)
+    lastLeftMouseBtnClickPosition: QPointF = QPointF(0, 0)
     _middleMousePressed = False
 
     # KEY PRESSED OVERRIDES VARIABLE
@@ -37,6 +36,7 @@ class graphicViewOverride(QGraphicsView):
     # GUI FUNCTION OVERRIDES VARIABLE
     _isPanning = False
     _dragPos = None
+    _isSelecting = False
 
     # OBJECT VARIABLE
     isConnectingPlug = False
@@ -47,12 +47,13 @@ class graphicViewOverride(QGraphicsView):
 
     def __init__(self, _graphicScene, parent=None):
         super(graphicViewOverride, self).__init__(parent)
-
+        self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
         self.lastCTRLCopyFont = None
         self.lastCTRLCopyColor = None
         self.selectedItem = None
         self.graphicScene = _graphicScene
         self.mousePosition = QPoint(0, 0)
+
         self.setScene(self.graphicScene)
         self.canvas = None
         self.setRenderProperties()
@@ -114,6 +115,8 @@ class graphicViewOverride(QGraphicsView):
         self.scenePosChanged.emit(int(self.mousePosition.x()), int(self.mousePosition.y()))
         if self.isConnectingPlug:
             self.tempArrow.updatePosition(self.mapToScene(event.pos()))
+        elif self._isSelecting:
+            self.updateSelection(event)
 
     ####################################################
     #
@@ -129,21 +132,13 @@ class graphicViewOverride(QGraphicsView):
             :param event: default mouse event
             :return: noyhing
         """
+        self.lastLeftMouseBtnClickPosition = self.mapToScene(event.pos())
         self.selectedItem = self.getItemAtClick(event)
-        if isinstance(self.selectedItem, plugGraphic):
+        if isinstance(self.selectedItem, PlugGraphic):
             if event.modifiers() and Qt.KeyboardModifier.ControlModifier:
                 print(self.selectedItem)
             else:
                 self.createArrow(event)
-
-    # LEFT MOUSE OVERRIDES
-    def createArrow(self, event):
-        # Crea una nuova freccia quando si clicca su un plugs
-        self.isConnectingPlug = True
-        self.tempArrow = Arrow(self.selectedItem, self.mapToScene(event.pos()))
-        self.tempArrow.currentNode = self.selectedItem.parentItem()
-        self.tempArrow.setZValue(-1)
-        self.scene().addItem(self.tempArrow)
 
     def middleMouseButtonPress(self, event):
         self._middleMousePressed = True
@@ -158,7 +153,7 @@ class graphicViewOverride(QGraphicsView):
 
     def leftMouseButtonRelease(self, event):
         item = self.getItemAtClick(event)
-        if self.isConnectingPlug and type(item) == plugGraphic:
+        if self.isConnectingPlug and type(item) == PlugGraphic:
             connection = self.tempArrow.establishConnection(item)
             connection.connect()
             self.scene().removeItem(self.tempArrow)
@@ -167,6 +162,8 @@ class graphicViewOverride(QGraphicsView):
             self.scene().removeItem(self.tempArrow)
             self.tempArrow = None
         self.isConnectingPlug = False
+        if self._isSelecting:
+            self.finishSelection(event)
 
     def middleMouseButtonRelease(self, event):
         self._middleMousePressed = False
@@ -190,6 +187,29 @@ class graphicViewOverride(QGraphicsView):
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
         if self._middleMousePressed and self._isPanning:
             self.panTheSceneWithMiddleMouse(event)
+
+    # LEFT MOUSE OVERRIDES
+    def createArrow(self, event):
+        # Crea una nuova freccia quando si clicca su un plugs
+        self.isConnectingPlug = True
+        self.tempArrow = Arrow(self.selectedItem, self.mapToScene(event.pos()))
+        self.tempArrow.currentNode = self.selectedItem.parentItem()
+        self.tempArrow.setZValue(-1)
+        self.scene().addItem(self.tempArrow)
+
+    def startSelection(self, event):
+        print("startSelection")
+        self.rubberBand.setGeometry(QRect(event.pos(), QSize()))
+        self.rubberBand.show()
+
+    def updateSelection(self, event):
+        self.rubberBand.setGeometry(QRect(self.lastLeftMouseBtnClickPosition, event.pos()).normalized())
+
+    def finishSelection(self, event):
+        self.rubberBand.hide()
+        self.selectedItem = self.items(self.lastLeftMouseBtnClickPosition.geometry())
+        print(self.selectedItem)
+        self._isSelecting = False
 
     def scaleScene(self, scaleFactor):
         """
@@ -286,34 +306,27 @@ class graphicViewOverride(QGraphicsView):
     def getItemAtClick(self, event):
         """ Ritorna l'oggetto selezionato cliccandoci sopra"""
         pos = event.pos()
-        return self.itemAt(pos)
+        x = self.lastLeftMouseBtnClickPosition.x()
+        y = self.lastLeftMouseBtnClickPosition.y()
+        width = QSize().width()
+        height = QSize().height()
+        rect = QRect(int(x), int(y), int(width), int(height))
+        items = self.items(rect, Qt.IntersectsItemShape)
+        item = self.itemAt(pos)
+        if len(items) > 0:
+            return items
+        else:
+            return item
 
     def deleteObject(self, obj):
         if isinstance(obj, Connection):
-            obj.startPlug.plugInterface.disconnect()
-            obj.endPlug.plugInterface.disconnect()
+            obj.startPlug.plugData.resetValue()
+            obj.endPlug.plugData.resetValue()
             self.scene().removeItem(obj)
         elif isinstance(obj, AbstractNodeGraphic):
-            self.checkForPlugConnection(obj)
-
+            for connection in obj.nodeData.connection:
+                self.scene().removeItem(connection)
             self.scene().removeItem(obj)
         else:
-            return
+            print(f"debug from delete object is {obj}")
 
-    def checkForPlugConnection(self, node):
-        plugs = node.nodeData.dataInPlugs
-        connections = []
-
-        for plug in plugs:
-            if plug.connectedWith:
-                if plug.connection not in connections:
-                    connections.append(plug.connection)
-                plug.disconnect()
-        plugs = node.nodeData.dataOutPlugs
-        for plug in plugs:
-            if plug.connectedWith:
-                if plug.connection not in connections:
-                    connections.append(plug.connection)
-                plug.disconnect()
-        for connection in connections:
-            self.scene().removeItem(connection)

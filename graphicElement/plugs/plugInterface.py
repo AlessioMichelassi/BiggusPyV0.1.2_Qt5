@@ -31,6 +31,10 @@ class plugInterface:
 
     @value.setter
     def value(self, _value):
+        try:
+            print(f"{self.nodeInterface.title} changed value of plug {self.name} to: {_value}")
+        except:
+            pass
         self.plugData.value = _value
 
     @property

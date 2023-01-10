@@ -87,18 +87,18 @@ La classe implementa i seguenti metodi:
 class Observer:
     observedNodesList = []
 
-    def __init__(self, node):
+    def __init__(self, node: 'AbstractNodeInterface'):
         self.mainNode = node
 
     def addObservedNode(self, node):
-        print(f"added node to observer: {node.title}")
+        # print(f"added node to observer: {node.title}")
         self.observedNodesList.append(node)
 
     def update(self):
-        print(f"updating from {self.mainNode.name}")
+        print(f"updating from {self.mainNode.title}")
         for observed_node in self.observedNodesList:
             observed_node.nodeData.calculate()
-            observed_node.calculate()
+            self.mainNode.nodeData.calculate()
 
 
 class AbstractNodeInterface:
@@ -158,11 +158,18 @@ class AbstractNodeInterface:
         node_class = getattr(module, className)
         return node_class(*args, interface=_interface, **kwargs)
 
-    def connectPlug(self, startNode: AbstractNodeData, startPlug, endNode: AbstractNodeData, endPlug):
-        startNode.connect(endNode, endPlug.index, startPlug.index)
-        endPlug.plugInterface.connectedWith = startPlug.plugInterface
-        startPlug.plugInterface.connectedWith = endPlug.plugInterface
-        self.addObservedNode(startNode.interface)
+    def connectPlug(self, startNode: AbstractNodeData, startPlug, endNode: AbstractNodeData, endPlug, connection):
+
+        value = self.nodeData.dataOutPlugs[0].value
+        endNode.changeInputValue(startPlug.plugData.index, value)
+
+        startNode.dataInPlugs[startPlug.index].connectedWith = self.nodeData.dataOutPlugs[0]
+        self.nodeData.dataOutPlugs[0].connectedWith = startNode.dataInPlugs[startPlug.index]
+        self.nodeData.dataOutPlugs[0].connection = connection
+
+        self.nodeData.connection.append(connection)
+        self.addObservedNode(endNode.nodeInterface)
+        self.nodeData.calculate()
 
     def disconnectPlug(self, _startNode, startPlug, _endNode, endPlug):
         # sourcery skip: assign-if-exp
@@ -183,9 +190,8 @@ class AbstractNodeInterface:
     def notifyToObserver(self):
         self.observer.update()
 
-    def updateValue(self, plug, value):
-        plug.value = value
-        plug.nodeGraphic.nodeGraphics.updateTextValue()
+    def updateOutputText(self):
+        self.nodeGraphic.updateTextValue()
 
     def serialize(self):
         dicts = OrderedDict([

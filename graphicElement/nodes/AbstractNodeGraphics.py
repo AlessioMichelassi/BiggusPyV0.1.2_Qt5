@@ -2,7 +2,7 @@ import contextlib
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-from graphicElement.plugs.plugGraphic import plugGraphic
+from graphicElement.plugs.PlugGraphic import PlugGraphic
 from graphicElement.connections.Connection import *
 
 
@@ -16,6 +16,8 @@ class superText(QGraphicsTextItem):
 
     def setText(self, text):
         self.parent.setValueFromGraphics(int(text))
+        self.parent.nodeInterface.nodeData.calculate()
+        self.parent.nodeInterface.notifyToObserver()
 
     def eventFilter(self, obj, event):
         # Verifica se l'evento è una pressione del tasto Invio
@@ -24,33 +26,6 @@ class superText(QGraphicsTextItem):
             self.setText(self.toPlainText().strip())
             return True
         return super().eventFilter(obj, event)
-
-
-class SuperQLineEdit(QGraphicsProxyWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        # Crea un QLineEdit e imposta il suo parent come questo oggetto QGraphicsProxyWidget
-        self.line_edit = QLineEdit(self)
-
-        # Imposta il QLineEdit come widget rappresentato da questo oggetto QGraphicsProxyWidget
-        self.setWidget(self.line_edit)
-
-        # Connetti il segnale textChanged del QLineEdit al metodo self.handle_text_changed
-        self.line_edit.textChanged.connect(self.handle_text_changed)
-
-    def handle_text_changed(self, text):
-        # Qui puoi ottenere il nuovo valore del testo chiamando il metodo text() del QLineEdit
-        value = self.line_edit.text()
-        try:
-            # Converte il testo in un intero
-            value = int(value)
-            self.parent.dataNode.value = value
-            # Adesso puoi usare il valore inserito dall'utente come vuoi
-            print(f'Valore inserito: {value}')
-        except ValueError:
-            # Se il testo non può essere convertito in un intero, mostra un messaggio di errore
-            print("Errore", "Il valore inserito non è un intero!")
 
 
 class AbstractNodeGraphic(QGraphicsItem):
@@ -123,7 +98,7 @@ class AbstractNodeGraphic(QGraphicsItem):
             self.nodeData.dataInPlugs[index].value = value
         self.txtValue.setPlainText(str(value))
         with contextlib.suppress(AttributeError):
-            self.interface.notifyToObserver()
+            self.nodeInterface.notifyToObserver()
 
     def updateTextValue(self):
         value = self.nodeData.dataOutPlugs[0].value
@@ -153,7 +128,7 @@ class AbstractNodeGraphic(QGraphicsItem):
         else:
             y = (self.height // inNumber)
         for i in range(inNumber):
-            plug = self.nodeInterface.nodeData.dataInPlugs[i].createPlug("In", self)
+            plug = self.nodeInterface.nodeData.dataInPlugs[i].createGraphicPlug("In", self)
             plug.index = i
             plug.setPos(QPointF(x, y))
             y += plug.diameter * 3
@@ -168,7 +143,7 @@ class AbstractNodeGraphic(QGraphicsItem):
         else:
             y = (self.height // outNumber)
         for i in range(outNumber):
-            plug = self.nodeInterface.nodeData.dataOutPlugs[i].createPlug("Out", self)
+            plug = self.nodeInterface.nodeData.dataOutPlugs[i].createGraphicPlug("Out", self)
             plug.index = i
             plug.setPos(QPointF(x, y))
             self.graphicOutputPlugs.append(plug)

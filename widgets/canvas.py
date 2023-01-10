@@ -68,9 +68,17 @@ class canvas(QWidget):
         _listNode = contextMenu.addAction("list node")
         _dictNode = contextMenu.addAction("dictionary node")
         contextMenu.addSeparator()
+        contextMenu.addSection("Math")
         _sumNode = contextMenu.addAction("sum Node")
         _productNode = contextMenu.addAction("product Node")
+        _expNode = contextMenu.addAction("power Node")
+        _divisionNode = contextMenu.addAction("Division Node")
+        _remainderNode = contextMenu.addAction("Remainder Node")
         _printNode = contextMenu.addAction("print Node")
+        contextMenu.addSeparator()
+        contextMenu.addSection("String")
+        _replaceNode = contextMenu.addAction("ReplaceNode Node")
+        _concatNode = contextMenu.addAction("ConcatNode Node")
         contextMenu.addSeparator()
 
         _mousePosition = self.graphicView.mousePosition

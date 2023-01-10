@@ -1,8 +1,13 @@
-BiggusPy è un editor di nodi per programmare in modo visuale.
-Ogni nodo rappresenta un'istruzione python come una variabile, una stringa o 
-il comando print. Collegando ad esempio una stringa al nodo print posso stampare sullo schermo 
-la frase "Hello World".
+BiggusPy è un editor di nodi che ti consente di programmare in modo visuale utilizzando una interfaccia 
+grafica intuitiva. Ciascun nodo rappresenta un'istruzione python, come una variabile, una stringa o un 
+comando print, che può essere collegato ad altri nodi per creare un flusso di dati e una serie di operazioni. 
+Collegando ad esempio una stringa al nodo print posso stampare sullo schermo la celebre frase "Hello World".
 
+Il programma è ancora in fase embrionale ma è già possibile effettuare alcune operazioni base come collegare, 
+scollegare, cancellare, salvare un progetto e aprire un progetto.
+
+
+PER GLI SVILUPPATORI:
 
 I nodi sono stati programmati, mettendo insieme tre classi, una classe per la parte dati che varia in funzione 
 del tipo di nodo, una classe graphica che si occupa di disegnare il nodo nella canvas e una classe interfaccia 

@@ -25,7 +25,8 @@ dove si clicca con il tasto destro.
 Il metodo addNodeToTheScene aggiunge un nodo alla scena e lo posiziona nella posizione del mouse.
 
 I metodi saveScene e serialize serializzano la scena e i nodi in essa contenuti in un formato che può essere salvato 
-su disco e successivamente caricato"""
+su disco e successivamente caricato
+"""
 
 
 class canvas(QWidget):

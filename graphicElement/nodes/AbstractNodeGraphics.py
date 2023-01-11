@@ -246,17 +246,32 @@ class AbstractNodeGraphic(QGraphicsItem):
         self.txtTitle.setPos(x, -30)
 
         plug = self.nodeInterface.nodeData.dataInPlugs[0].plugGraphic
-        self.nodeInterface.nodeData.dataInPlugs[0].changeName("signal")
+        plug.txtTitle.setPlainText("signal")
+        x = plug.txtTitle.boundingRect().width()
+        x = (x * -1) - 5
+        plug.txtTitle.setPos(x, -10)
         plug.setPos(10, 20)
 
         plug = self.nodeInterface.nodeData.dataInPlugs[1].plugGraphic
-        plug.setPos(-10, self.height//2)
+        plug.txtTitle.setPlainText("comparator")
+        x = plug.txtTitle.boundingRect().width()
+        x = (x * -1) - 5
+        plug.txtTitle.setPos(x, -10)
+        plug.setPos(10, self.height -20)
 
         plug = self.nodeInterface.nodeData.dataOutPlugs[0].plugGraphic
+        plug.txtTitle.setPlainText("if true")
+        x = plug.txtTitle.boundingRect().width()
+        x = 10
+        plug.txtTitle.setPos(x, -10)
         plug.setPos(100, 20)
 
         plug = self.nodeInterface.nodeData.dataOutPlugs[1].plugGraphic
-        plug.setPos(self.width//2, self.height)
+        plug.txtTitle.setPlainText("else")
+        x = plug.txtTitle.boundingRect().width()
+        x = 10
+        plug.txtTitle.setPos(x, -10)
+        plug.setPos(100, self.height -20)
 
         if self.isThereAProxyWidget:
             x = (self.width - textItemWidth) // 2

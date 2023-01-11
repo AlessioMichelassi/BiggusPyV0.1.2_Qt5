@@ -32,7 +32,7 @@ class NodeNameInputWidget(QWidget):
         self.node_name_list = self.canvas.node_name_list
 
         self.completer = QCompleter(self.node_name_list)
-        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
         self.lndInput = QLineEdit()
         self.lndInput.setCompleter(self.completer)

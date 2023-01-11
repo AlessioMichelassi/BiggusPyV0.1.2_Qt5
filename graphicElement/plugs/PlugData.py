@@ -23,6 +23,9 @@ class PlugData:
     def name(self, _name):
         self._name = _name
 
+    def changeName(self, _name):
+        self._name = _name
+
     @property
     def connection(self):
         return self._connection

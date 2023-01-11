@@ -34,7 +34,7 @@ su disco e successivamente caricato
 class canvas(QWidget):
     node_name_list = ["NumberNode", "StringNode", "ListNode", "DictNode", "SumNode",
                       "ProductNode", "PowerNode", "DivisionNode", "RemainderNode",
-                      "PrintNode", "ReplaceNode", "ConcatNode"]
+                      "PrintNode", "ReplaceNode", "ConcatNode", "IfNode", "ForLoopNode"]
     mainLayout: QLayout
     graphicView: graphicViewOverride
     graphicScene: graphicSceneOverride
@@ -65,7 +65,6 @@ class canvas(QWidget):
         self.mainLayout.addWidget(self.graphicView)
 
         self.setGeometry(200, 200, 1200, 800)
-        self.setWindowTitle("BiggusPy")
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         contextMenu = QMenu(self)

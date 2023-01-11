@@ -6,6 +6,9 @@ Collegando ad esempio una stringa al nodo print posso stampare sullo schermo la 
 Il programma è ancora in fase embrionale ma è già possibile effettuare alcune operazioni base come collegare, 
 scollegare, cancellare, salvare un progetto e aprire un progetto.
 
+Per inserire nodi nella scena basta premere tab, scrivere il nome del nodo, oppure si può selezionare 
+il nodo dal menù contestuale che si apre cliccando con il tasto destro un qualsiasi punto della canvas.
+
 
 PER GLI SVILUPPATORI:
 

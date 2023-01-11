@@ -1,6 +1,46 @@
+import random
 from typing import Dict, Union, List
 
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QLineEdit, QGraphicsProxyWidget
+
 from graphicElement.nodes.AbstractNodeData import AbstractNodeData
+
+
+class generateColorVariation:
+
+    def returnColor(self, r, g, b, colorDominant=None, percentage=10):
+        percs = 255 * percentage // 100
+        r_var = random.randint(-percs, percs)
+        g_var = random.randint(-percs, percs)
+        b_var = random.randint(-percs, percs)
+        if colorDominant == "r":
+            r_var = random.randint(-percs, percs)
+            g_var = random.randint(-percs // 2, percs // 2)
+            b_var = random.randint(-percs // 2, percs // 2)
+        elif colorDominant == "g":
+            r_var = random.randint(-percs // 2, percs // 2)
+            g_var = random.randint(-percs, percs)
+            b_var = random.randint(-percs // 2, percs // 2)
+        elif colorDominant == "b":
+            r_var = random.randint(-percs // 2, percs // 2)
+            g_var = random.randint(-percs // 2, percs // 2)
+            b_var = random.randint(-percs, percs)
+
+        r += r_var
+        g += g_var
+        b += b_var
+
+        r = min(255, max(r, 0))
+        g = min(255, max(g, 0))
+        b = min(255, max(b, 0))
+        if r < 0:
+            r = 0
+        if g < 0:
+            g = 0
+        if b < 0:
+            b = 0
+        return QColor(r, g, b)
 
 
 #####################################################
@@ -11,10 +51,11 @@ from graphicElement.nodes.AbstractNodeData import AbstractNodeData
 
 
 class NumberNode(AbstractNodeData):
+    lineEdit: QLineEdit
 
     def __init__(self, value: Union[int, float], interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.name = "NumberNode"
+        self.name = "Number"
         self.resetValue = value
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -25,11 +66,40 @@ class NumberNode(AbstractNodeData):
         self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value
         return self.dataOutPlugs[0].value
 
+    def redefineGraphics(self):
+        self.nodeInterface.nodeGraphic.borderColorDefault = QColor(10, 200, 10)
+        self.nodeInterface.nodeGraphic.borderColorSelect = QColor(255, 70, 10)
+        self.nodeInterface.nodeGraphic.backGroundColor = QColor(30, 50, 40)
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(50, 120)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,0,90); \
+                                       color: rgba(200,255,200,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(0,70,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
+
 
 class SumNode(AbstractNodeData):
+    lineEdit: QLineEdit
+
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.name = "SumNode"
+        self.name = "Sum"
         self.resetValue = 0
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -39,11 +109,43 @@ class SumNode(AbstractNodeData):
         self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value + self.dataInPlugs[1].value
         return self.dataOutPlugs[outIndex].value
 
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0, "r")
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0, "r")
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(255, 153, 0, "r")
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
+
 
 class ProductNode(AbstractNodeData):
+    lineEdit: QLineEdit
+
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.name = "ProductNode"
+        self.name = "Product"
         self.resetValue = 0
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -53,11 +155,44 @@ class ProductNode(AbstractNodeData):
         self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value * self.dataInPlugs[1].value
         return self.dataOutPlugs[outIndex].value
 
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(255, 244, 52, percentage=80)
+        print(f"{backgroundColor.red()}, {backgroundColor.green()}, {backgroundColor.blue()}")
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
+
 
 class ExpNode(AbstractNodeData):
+    lineEdit: QLineEdit
+
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.name = "ExponentialNode"
+        self.name = "Exponential"
         self.dataInPlugs = []
         self.dataOutPlugs = []
         self.createPlugs()
@@ -66,12 +201,42 @@ class ExpNode(AbstractNodeData):
         self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value ** self.dataInPlugs[1].value
         return self.dataOutPlugs[outIndex].value
 
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(255, 251, 67)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
+
 
 class DivisionNode(AbstractNodeData):
     def __init__(self, isInteger=False, interface=None):
         super().__init__(numIn=2, numOuts=1, interface=interface)
         self.isInteger = isInteger
-        self.name = "DivisionNode"
+        self.name = "Division"
         self.dataInPlugs = []
         self.dataOutPlugs = []
         self.createPlugs()
@@ -86,11 +251,41 @@ class DivisionNode(AbstractNodeData):
             self.dataOutPlugs[outIndex].value = 0
         return self.dataOutPlugs[outIndex].value
 
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(255, 128, 65)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
+
 
 class RemainderNode(AbstractNodeData):
     def __init__(self, isInteger=False, interface=None):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.name = "ReminderNode"
+        self.name = "Reminder"
         self.dataInPlugs = []
         self.dataOutPlugs = []
         self.createPlugs()
@@ -98,6 +293,36 @@ class RemainderNode(AbstractNodeData):
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value % self.dataInPlugs[1].value
         return self.dataOutPlugs[outIndex].value
+
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(255, 218, 0)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 70)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
 
 
 #####################################################
@@ -107,9 +332,11 @@ class RemainderNode(AbstractNodeData):
 #
 
 class StringNode(AbstractNodeData):
+    lineEdit = QLineEdit
+
     def __init__(self, value: str, interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.name = "StringNode"
+        self.name = "String"
         self.resetValue = value
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -122,13 +349,39 @@ class StringNode(AbstractNodeData):
 
     def redefineGraphics(self):
         print("graphic redesign")
+        self.nodeInterface.nodeGraphic.borderColorDefault = QColor(10, 10, 10)
+        self.nodeInterface.nodeGraphic.borderColorSelect = QColor(255, 70, 10)
+        self.nodeInterface.nodeGraphic.backGroundColor = QColor(30, 30, 40)
+        self.createProxyWidget()
         self.nodeInterface.nodeGraphic.redesign(180, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,0,90); \
+                                       color: rgba(255,255,255,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(0,0,70,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(self.resetValue)
+
+    def returnName(self):
+        self.changeInputValue(0, self.lineEdit.text())
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
 
 
 class ListNode(AbstractNodeData):
+    lineEdit = QLineEdit
+
     def __init__(self, value: List[Union[int, float, str]], interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.name = "ListNode"
+        self.name = "List"
         self.resetValue = value
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -139,8 +392,39 @@ class ListNode(AbstractNodeData):
         self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value
         return self.dataOutPlugs[0].value
 
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(255, 209, 159)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 70)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
+
 
 class DictNode(AbstractNodeData):
+    lineEdit = QLineEdit
     """
     Questa classe ha due input, uno per la chiave e uno per il valore del dizionario,
     e un output che rappresenta il dizionario costruito a partire da questi input.
@@ -157,7 +441,7 @@ class DictNode(AbstractNodeData):
 
     def __init__(self, value: dict, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.name = "StringNode"
+        self.name = "Dictionary"
         self.resetValue = ""
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -169,6 +453,36 @@ class DictNode(AbstractNodeData):
         value = self.dataInPlugs[1].value
         self.dataOutPlugs[outIndex].value = {key: value}
         return self.dataOutPlugs[outIndex].value
+
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(178, 255, 177)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 70)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
 
 
 class ConcatNode(AbstractNodeData):
@@ -190,7 +504,7 @@ class ConcatNode(AbstractNodeData):
 class ReplaceNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=3, numOuts=1, interface=interface)
-        self.name = "ReplaceNode"
+        self.name = "Replace"
         self.resetValue = ""
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -207,7 +521,7 @@ class ReplaceNode(AbstractNodeData):
 class PrintNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.name = "PrintNode"
+        self.name = "Print"
         self.resetValue = ""
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -220,6 +534,36 @@ class PrintNode(AbstractNodeData):
     def connect(self, endNode: "AbstractNodeData", input_index: int, output_index: int):
         endNode.dataInPlugs[input_index] = self.dataOutPlugs[output_index]
 
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(76, 63, 0)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
+
 
 #####################################################
 #
@@ -227,39 +571,98 @@ class PrintNode(AbstractNodeData):
 #
 #
 
-
 class AndNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.name = "AndNode"
+        self.name = "And"
         self.resetValue = ""
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int) -> Union[str]:
-        input1 = self.inPlugs[0].value
-        input2 = self.inPlugs[1].value
-        self.outPlugs[outIndex].value = input1 and input2
-        return self.outPlugs[outIndex].value
+        input1 = self.dataInPlugs[0].value
+        input2 = self.dataInPlugs[1].value
+        self.dataOutPlugs[outIndex].value = input1 and input2
+        return self.dataOutPlugs[outIndex].value
+
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(109, 255, 232)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
 
 
 class OrNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.name = "OrNode"
+        self.name = "Or"
         self.resetValue = ""
-        self.inPlugs = []
-        self.outPlugs = []
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int) -> Union[str]:
-        input1 = self.inPlugs[0].value
-        input2 = self.inPlugs[1].value
-        self.outPlugs[outIndex].value = input1 or input2
-        return self.outPlugs[outIndex].value
+        input1 = self.dataInPlugs[0].value
+        input2 = self.dataInPlugs[1].value
+        self.dataOutPlugs[outIndex].value = input1 or input2
+        return self.dataOutPlugs[outIndex].value
+
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(255, 172, 161)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
 
 
 class IfNode(AbstractNodeData):
@@ -283,30 +686,65 @@ class IfNode(AbstractNodeData):
     """
 
     def __init__(self, interface):
-        super().__init__(numIn=3, numOuts=1, interface=interface)
-        self.name = "OrNode"
-        self.resetValue = ""
-        self.inPlugs = []
-        self.outPlugs = []
+        super().__init__(numIn=2, numOuts=2, interface=interface)
+        self.name = "if"
+        self.resetValue = False
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
         self.createPlugs()
         self.changeInputValue(0, self.resetValue)
 
     def calculateOutput(self, outIndex: int):
-        condition = self.inPlugs[0].value
-        if_value = self.inPlugs[1].value
-        else_value = self.inPlugs[2].value
+        condition = self.dataInPlugs[0].value
+        if_value = self.dataInPlugs[1].value
+        else_value = "self.dataInPlugs[2].value"
         print(f"if {condition} , value 1 {if_value}, value2 {else_value}")
         if condition:
-            self.outPlugs[outIndex].value = if_value
+            self.dataOutPlugs[outIndex].value = if_value
         else:
-            self.outPlugs[outIndex].value = else_value
-        return self.outPlugs[outIndex]
+            self.dataOutPlugs[outIndex].value = else_value
+        return self.dataOutPlugs[outIndex]
+
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(125, 255, 146)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80, "diamond")
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(30,70,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
 
 
 class ForLoopNode(AbstractNodeData):
     def __init__(self, start: int, end: int, step: int = 1, interface=None):
         super().__init__(numIn=1, numOuts=2, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
         self.name = "ForLoopNode"
+        self.resetValue = False
+        self.dataInPlugs = []
+        self.dataOutPlugs = []
+        self.createPlugs()
+        self.changeInputValue(0, self.resetValue)
         self.start = start
         self.end = end
         self.step = step
@@ -318,17 +756,41 @@ class ForLoopNode(AbstractNodeData):
         else:  # l'uscita 1 indica il valore corrente del ciclo
             return self.currentValue
 
-    def changeInputValue(self, inputIndex, value):
-        self.dataInPlugs[inputIndex].value = value
-        # il valore di ingresso del nodo For Loop non viene utilizzato,
-        # quindi si può ignorare questa chiamata
-        self.calculate()
-
     def calculate(self):
         self.currentValue += self.step
         if self.currentValue >= self.end:
             self.currentValue = self.start
         super().calculate()  # esegue il calcolo delle uscite come al solito
+
+    def redefineGraphics(self):
+        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
+        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
+        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
+        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
+        backgroundColor = generateColorVariation().returnColor(83, 47, 252)
+        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
+        self.createProxyWidget()
+        self.nodeInterface.nodeGraphic.redesign(120, 80)
+
+    def createProxyWidget(self):
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setStyleSheet(
+            "background-color: \
+                                       rgba(10,10,10,90); \
+                                       color: rgba(255, 255, 102,255); \
+                                       border-style: solid; \
+                                       border-radius: 4px; border-width: 1px; \
+                                       border-color: rgba(70,0,0,255);"
+        )
+        self.lineEdit.returnPressed.connect(self.returnName)
+        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
+        self.lineEdit.setText(str(self.resetValue))
+
+    def returnName(self):
+        self.changeInputValue(0, int(self.lineEdit.text()))
+
+    def updateText(self, value):
+        self.lineEdit.setText(str(value))
 
 
 if __name__ == "__main__":

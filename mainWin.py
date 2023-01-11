@@ -1,3 +1,4 @@
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
 from widgets.canvas import canvas
@@ -17,6 +18,8 @@ nella scena del canvas.
 
 Il metodo initMenu crea il menù della finestra e aggiunge alcune azioni al menù File e al menù Modifica.
 """
+
+
 class MainWindow(QMainWindow):
     canvas: canvas
     statusMousePosition: QLabel
@@ -29,12 +32,12 @@ class MainWindow(QMainWindow):
         self.initMenu()
 
     def initUI(self):
-        self.setWindowTitle('Main Window')
+        self.setWindowTitle("BiggusPy(a great Caesar's friend) V0.1.2")
         self.setGeometry(100, 100, 800, 600)
         # Imposta il titolo della finestra
         self.setWindowTitle('BiggusPyV0.1.2')
         # Imposta l'icona della finestra
-        # self.setWindowIcon(QIcon('path/to/icon.png'))
+        self.setWindowIcon(QIcon('graphicElement/imgs/BiggusIcon.ico'))
         self.canvas = canvas()
         self.setCentralWidget(self.canvas)
 

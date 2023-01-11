@@ -77,10 +77,13 @@ class DivisionNode(AbstractNodeData):
         self.createPlugs()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
-        if self.isInteger:
-            self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value // self.dataInPlugs[1].value
-        else:
-            self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value / self.dataInPlugs[1].value
+        try:
+            if self.isInteger:
+                self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value // self.dataInPlugs[1].value
+            else:
+                self.dataOutPlugs[outIndex].value = self.dataInPlugs[0].value / self.dataInPlugs[1].value
+        except ZeroDivisionError:
+            self.dataOutPlugs[outIndex].value = 0
         return self.dataOutPlugs[outIndex].value
 
 

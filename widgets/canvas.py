@@ -1,5 +1,7 @@
 import json
+import random
 
+from PyQt5 import Qt
 from PyQt5.QtCore import QPointF
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -30,6 +32,9 @@ su disco e successivamente caricato
 
 
 class canvas(QWidget):
+    node_name_list = ["NumberNode", "StringNode", "ListNode", "DictNode", "SumNode",
+                      "ProductNode", "PowerNode", "DivisionNode", "RemainderNode",
+                      "PrintNode", "ReplaceNode", "ConcatNode"]
     mainLayout: QLayout
     graphicView: graphicViewOverride
     graphicScene: graphicSceneOverride
@@ -43,6 +48,7 @@ class canvas(QWidget):
         super(canvas, self).__init__(parent)
 
         self.nodesInTheScene = []
+        self.connections = []
         self.nodeNames = []
         self.initUI()
         self.mainWin = parent
@@ -99,10 +105,31 @@ class canvas(QWidget):
             node_interface = AbstractNodeInterface("ProductNode", view=self.graphicView)
         elif action == _printNode:
             node_interface = AbstractNodeInterface("PrintNode", view=self.graphicView)
+        elif action == _expNode:
+            node_interface = AbstractNodeInterface("ExpNode", view=self.graphicView)
+        elif action == _divisionNode:
+            node_interface = AbstractNodeInterface("DivisionNode", view=self.graphicView)
+        elif action == _remainderNode:
+            node_interface = AbstractNodeInterface("RemainderNode", view=self.graphicView)
+        elif action == _replaceNode:
+            node_interface = AbstractNodeInterface("ReplaceNode", view=self.graphicView)
+        elif action == _concatNode:
+            node_interface = AbstractNodeInterface("ConcatNode", view=self.graphicView)
         else:
             pass
         if node_interface:
             self.addNodeToTheScene(node_interface, _mousePosition)
+
+    def createNodeFromDialog(self, nodeName, centerPoint):
+        x = random.randint(1, 100)
+        if "Number" in nodeName:
+            node = AbstractNodeInterface(nodeName, value=x, view=self)
+        elif "DictNode" in nodeName:
+            node = AbstractNodeInterface(nodeName, value="", view=self)
+        else:
+            node = AbstractNodeInterface(nodeName, view=self)
+
+        self.addNodeToTheScene(node, centerPoint)
 
     def addNodeToTheScene(self, nodeInterface, mousePos):
         index = 0

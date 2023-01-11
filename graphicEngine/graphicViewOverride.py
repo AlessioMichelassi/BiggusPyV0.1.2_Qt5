@@ -1,3 +1,5 @@
+import typing
+
 from graphicElement.nodes.AbstractNodeGraphics import *
 
 """La classe graphicViewOverride estende la classe QGraphicsView di PyQt5 e sovrascrive alcuni dei suoi metodi per 
@@ -19,6 +21,42 @@ i tasti premuti e i pulsanti del mouse premuti.
 
 CANVAS_SCALE = 0.9
 CENTER_ON = (430, 340)
+
+
+class NodeNameInputWidget(QWidget):
+    def __init__(self, canvas, view, centerPoint, parent=None):
+        super().__init__(parent)
+        self.canvas = canvas
+        self.graphicView = view
+        self.centerPoint = centerPoint
+        self.node_name_list = self.canvas.node_name_list
+
+        self.completer = QCompleter(self.node_name_list)
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)
+
+        self.lndInput = QLineEdit()
+        self.lndInput.setCompleter(self.completer)
+        self.lndInput.returnPressed.connect(self.returnName)
+        self.okButton = QPushButton("Create")
+        self.okButton.clicked.connect(self.returnName)
+        self.cancelButton = QPushButton("Cancel")
+        self.cancelButton.clicked.connect(self.close)
+
+        # Create and set the layout
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.okButton)
+        button_layout.addWidget(self.cancelButton)
+        mainLayout = QVBoxLayout(self)
+        mainLayout.addWidget(self.lndInput)
+        mainLayout.addLayout(button_layout)
+        self.setLayout(mainLayout)
+
+    def returnName(self):
+        node_name = self.sender().parent().lndInput.text()
+        # Create the node using the name
+        if node_name:
+            self.canvas.createNodeFromDialog(node_name, self.centerPoint)
+        self.close()
 
 
 class graphicViewOverride(QGraphicsView):
@@ -278,6 +316,7 @@ class graphicViewOverride(QGraphicsView):
             self.deleteObject(self.selectedItem)
         elif event.key() == Qt.Key_Tab:
             print("Tab key pressed")
+            self.createNode()
 
         elif event.modifiers() and Qt.KeyboardModifier.ControlModifier:
 
@@ -329,6 +368,18 @@ class graphicViewOverride(QGraphicsView):
             for connection in obj.nodeData.connection:
                 self.scene().removeItem(connection)
             self.scene().removeItem(obj)
-        else:
-            print(f"debug from delete object is {obj}")
+        elif len(self.scene().selectedItems()) > 1:
+            group = QGraphicsItemGroup()
+            for item in self.scene().selectedItems():
+                group.addToGroup(item)
+            self.scene().removeItem(group)
 
+    def createNode(self):
+        centerPoint = self.mapToScene(self.viewport().rect().center())
+        dialog = NodeNameInputWidget(self.canvas, self, centerPoint, self)
+        rect = self.canvas.geometry()
+        _center = rect.center()
+        x = _center.x()
+        y = _center.y()
+        dialog.move(int(x), int(y))
+        dialog.show()

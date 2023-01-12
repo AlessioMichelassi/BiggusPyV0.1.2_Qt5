@@ -19,26 +19,26 @@ La classe implementa i seguenti metodi:
                 e una vista (che  rappresenta la finestra in cui verrà visualizzato il nodo). 
                 Crea l'istanza del nodo grafico e dei dati del nodo, e chiama il metodo createPlug() 
                 per creare i plugs del nodo. 
-    
+
     createPlug(self): 
                 questo metodo viene chiamato per creare i plugs del nodo. Prende in input il numero 
                 di plugs di input e di output del nodo e crea gli oggetti grafici che rappresentano i plugs.
-                
+
     createNode(className: str, *args, _interface, **kwargs) -> AbstractNodeData:  
                 questo metodo viene chiamato per creare un'istanza della classe dei dati del nodo. 
                 Prende in input il nome della classe del nodo e eventuali argomenti e keyword arguments. 
                 Carica dinamicamente il modulo che contiene la classe del nodo e crea un'istanza della classe 
                 passando l'interfaccia del nodo come argomento.
-                
+
     connectPlug(self, startNode: AbstractNodeData, startPlug, endNode: AbstractNodeData, endPlug): 
-    
+
                 questo metodo viene chiamato per connettere i plugs di due nodi. Prende in input i dati 
                 dei nodi e i plugs da connettere e chiama il metodo connect() dell'oggetto startNode 
                 passando i dati del nodo di destinazione e gli indici dei plugs da connettere. Aggiorna poi 
                 gli oggetti connectedWith dei plugs con l'oggetto plugInterface dell'altro plug. 
-                
+
     disconnectPlug(self, _startNode, startPlug, _endNode, endPlug): 
-    
+
                 questo metodo viene chiamato per scollegare i plugs di due nodi. Prende in input i dati dei nodi 
                 e i plugs da scollegare e chiama il metodo disconnect() dell'oggetto nodeData del nodo di partenza 
                 (startNode) passando come argomenti l'oggetto nodeData del nodo di arrivo (endNode) e 
@@ -48,20 +48,20 @@ La classe implementa i seguenti metodi:
                 setValueFromGraphics() del nodo grafico per impostare questo valore nel nodo grafico.
 
     addObserver(self, observer: Observer): 
-    
+
                 questo metodo viene chiamato per aggiungere un osservatore a un nodo. 
                 Prende in input l'oggetto observer e lo aggiunge alla lista degli osservatori 
                 del nodo (self.observers). Inoltre, chiama il metodo addObservedNode() dell'oggetto 
                 observer passando come argomento il nodo stesso (self).
 
     notifyToObserver(self): 
-    
+
                 questo metodo viene chiamato quando il valore di un nodo cambia e gli osservatori 
                 devono essere notificati. Itera sulla lista degli osservatori del nodo (self.observers) 
                 e chiama il metodo update() di ognuno di essi.
 
     removeObserver(self, observer: Observer): 
-    
+
                 questo metodo viene chiamato per rimuovere un osservatore da un nodo. 
                 Prende in input l'oggetto observer e lo rimuove dalla lista degli osservatori 
                 del nodo (self.observers). Inoltre, chiama il metodo removeObservedNode() dell'oggetto 
@@ -75,12 +75,12 @@ La classe implementa i seguenti metodi:
                 il nodo e i suoi dati.
 
     deserialize(cls, data: str, graphicView): 
-    
+
                 questo metodo statico viene utilizzato per deserializzare un nodo, 
                 ovvero ricostruirlo a partire da una stringa di testo. 
                 Prende in input la stringa di dati serializzati del nodo e il riferimento 
                 alla graphicView a cui appartiene il nodo e restituisce un'istanza del nodo deserializzato.
-                
+
                 """
 
 

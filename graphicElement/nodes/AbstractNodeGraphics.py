@@ -195,6 +195,15 @@ class AbstractNodeGraphic(QGraphicsItem):
         textItemHeight = self.txtTitle.boundingRect().height()
         x = (self.width - textItemWidth) / 2
         self.txtTitle.setPos(x, -30)
+
+        self.repositionThePlugForDefaultFigure()
+        if self.isThereAProxyWidget:
+            x = 10
+            self.proxyWidget.setMaximumWidth(self.width - 20)
+            y = self.height - self.proxyWidget.size().height() - 5
+            self.proxyWidget.setPos(x, y)
+
+    def repositionThePlugForDefaultFigure(self):
         inNumber = len(self.nodeData.dataInPlugs)
         x = -8
         if inNumber == 0:
@@ -220,11 +229,12 @@ class AbstractNodeGraphic(QGraphicsItem):
             plug.setPos(QPointF(x, y))
             y += plug.diameter * 3
 
-        if self.isThereAProxyWidget:
-            x = 10
-            y = self.height - self.proxyWidget.size().height() - 5
-            self.proxyWidget.setMaximumWidth(self.width - 20)
-            self.proxyWidget.setPos(x, y)
+    def changeTextToInPlug(self, index, text):
+        plug = self.nodeInterface.nodeData.dataInPlugs[index].plugGraphic
+        plug.txtTitle.setPlainText(text)
+        x = plug.txtTitle.boundingRect().width()
+        x = (x * -1) - 5
+        plug.txtTitle.setPos(x, -10)
 
     def designDiamondShape(self):
         self.height = self.width

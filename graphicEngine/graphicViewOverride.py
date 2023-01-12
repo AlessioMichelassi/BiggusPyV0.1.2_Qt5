@@ -40,7 +40,7 @@ class NodeNameInputWidget(QWidget):
         self.okButton = QPushButton("Create")
         self.okButton.clicked.connect(self.returnName)
         self.cancelButton = QPushButton("Cancel")
-        self.cancelButton.clicked.connect(self.close)
+        self.cancelButton.clicked.connect(self.closeWin)
 
         # Create and set the layout
         button_layout = QHBoxLayout()
@@ -52,10 +52,16 @@ class NodeNameInputWidget(QWidget):
         self.setLayout(mainLayout)
 
     def returnName(self):
+        # sourcery skip: use-named-expression
         node_name = self.sender().parent().lndInput.text()
         # Create the node using the name
         if node_name:
             self.canvas.createNodeFromDialog(node_name, self.centerPoint)
+        self.graphicView.isTabWindowsOpen = False
+        self.close()
+
+    def closeWin(self):
+        self.graphicView.isTabWindowsOpen = False
         self.close()
 
 
@@ -78,6 +84,7 @@ class graphicViewOverride(QGraphicsView):
 
     # OBJECT VARIABLE
     isConnectingPlug = False
+    isTabWindowsOpen = False
 
     arrowList = []
     nodeList = []
@@ -118,6 +125,15 @@ class graphicViewOverride(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
         self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
+
+    def event(self, event):
+        if event.type() == QEvent.KeyPress:
+
+            if not self.isTabWindowsOpen:
+                if event.key() == Qt.Key_Tab:
+                    self.isTabWindowsOpen = True
+                    self.createNode()
+        return super().event(event)
 
     def wheelEvent(self, event):
         self.scaleScene(math.pow(2.0, -event.angleDelta().y() / 240.0))
@@ -314,12 +330,8 @@ class graphicViewOverride(QGraphicsView):
             print("B pressed")
         elif key == Qt.Key.Key_Delete:
             self.deleteObject(self.selectedItem)
-        elif event.key() == Qt.Key_Tab:
-            print("Tab key pressed")
-            self.createNode()
 
         elif event.modifiers() and Qt.KeyboardModifier.ControlModifier:
-
             self.checkForModifier(event)
             # Questa parte controlla le sequenze di tasti
 

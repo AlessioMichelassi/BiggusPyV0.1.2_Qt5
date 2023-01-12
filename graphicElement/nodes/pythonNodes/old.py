@@ -1,8 +1,8 @@
 import random
 from typing import Dict, Union, List
 
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QLineEdit, QGraphicsProxyWidget
 
 from graphicElement.nodes.AbstractNodeData import AbstractNodeData
 
@@ -121,7 +121,6 @@ class SumNode(AbstractNodeData):
 
     def createProxyWidget(self):
         self.lineEdit = QLineEdit()
-        self.lineEdit.setReadOnly(True)
         self.lineEdit.setStyleSheet(
             "background-color: \
                                        rgba(10,10,10,90); \
@@ -130,6 +129,7 @@ class SumNode(AbstractNodeData):
                                        border-radius: 4px; border-width: 1px; \
                                        border-color: rgba(70,0,0,255);"
         )
+        self.lineEdit.returnPressed.connect(self.returnName)
         self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
         self.lineEdit.setText(str(self.resetValue))
 
@@ -666,9 +666,27 @@ class OrNode(AbstractNodeData):
 
 
 class IfNode(AbstractNodeData):
+    """
+    La classe IfNode eredita da AbstractNode e ha un numero di input
+    e di output pari a 1. Nel metodo calculate,
+    viene valutata la condizione presente nell'input 0: se essa è vera,
+    viene assegnato all'output 0 il valore presente nell'input 1,
+    altrimenti viene assegnato all'output 0 il valore presente nell'input 2.
+
+    Per utilizzare questo nodo, dovrai connettere i nodi di input
+    e output in modo appropriato.
+
+    Ad esempio, potresti utilizzare un NumberNode per l'input 0
+    (che rappresenta la condizione) e altri due NumberNode
+    per gli input 1 e 2 (che rappresentano i valori da assegnare
+    all'output in base al risultato della condizione).
+
+    In questo modo, il IfNode funzionerà come una sorta di
+    "selettore" di valori, a seconda del risultato della condizione.
+    """
 
     def __init__(self, interface):
-        super().__init__(numIn=3, numOuts=1, interface=interface)
+        super().__init__(numIn=2, numOuts=2, interface=interface)
         self.name = "if"
         self.resetValue = False
         self.dataInPlugs = []
@@ -678,24 +696,24 @@ class IfNode(AbstractNodeData):
 
     def calculateOutput(self, outIndex: int):
         condition = self.dataInPlugs[0].value
+        if_value = self.dataInPlugs[1].value
+        else_value = "self.dataInPlugs[2].value"
+        print(f"if {condition} , value 1 {if_value}, value2 {else_value}")
         if condition:
-            self.dataOutPlugs[outIndex].value = self.dataInPlugs[1].value
+            self.dataOutPlugs[outIndex].value = if_value
         else:
-            self.dataOutPlugs[outIndex].value = self.dataInPlugs[2].value
+            self.dataOutPlugs[outIndex].value = else_value
+        return self.dataOutPlugs[outIndex]
 
     def redefineGraphics(self):
         borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
         self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
         borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
         self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
-        backgroundColor = generateColorVariation().returnColor(255, 244, 52, percentage=80)
-        print(f"{backgroundColor.red()}, {backgroundColor.green()}, {backgroundColor.blue()}")
+        backgroundColor = generateColorVariation().returnColor(125, 255, 146)
         self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
         self.createProxyWidget()
-        self.nodeInterface.nodeGraphic.redesign(120, 80)
-        self.nodeInterface.nodeGraphic.changeTextToInPlug(0, "condition")
-        self.nodeInterface.nodeGraphic.changeTextToInPlug(1, "true")
-        self.nodeInterface.nodeGraphic.changeTextToInPlug(2, "false")
+        self.nodeInterface.nodeGraphic.redesign(120, 80, "diamond")
 
     def createProxyWidget(self):
         self.lineEdit = QLineEdit()
@@ -705,7 +723,7 @@ class IfNode(AbstractNodeData):
                                        color: rgba(255, 255, 102,255); \
                                        border-style: solid; \
                                        border-radius: 4px; border-width: 1px; \
-                                       border-color: rgba(70,0,0,255);"
+                                       border-color: rgba(30,70,0,255);"
         )
         self.lineEdit.returnPressed.connect(self.returnName)
         self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
@@ -718,285 +736,41 @@ class IfNode(AbstractNodeData):
         self.lineEdit.setText(str(value))
 
 
-class functionWidget(QWidget):
-
-    def __init__(self, node: AbstractNodeData, parent=None):
-        super().__init__(parent)
-        self.node = node
-        self.txtFunction = QPlainTextEdit()
-        self.lineEdit = QLineEdit()
-        layout = QVBoxLayout()
-        layout.addWidget(self.txtFunction)
-        layout.addWidget(self.lineEdit)
-        self.setLayout(layout)
-
-        self.txtFunction.textChanged.connect(self.returnFunction)
-        self.setStyleX()
-
-    def returnFunction(self):
-        function_string = self.txtFunction.toPlainText()
-        functionTemp = function_string.split("(")
-        functionName = functionTemp[0].replace("def ", "").strip()
-        self.node.function = self.node.createFunctionFromString(functionName, function_string)
-
-    def updateFunctionText(self, value):
-        self.txtFunction.setPlainText(str(value))
-
-    def setStyleX(self):
-        self.lineEdit.setStyleSheet(
-            "background-color: \
-                                       rgba(10,10,10,90); \
-                                       color: rgba(255, 255, 102,255); \
-                                       border-style: solid; \
-                                       border-radius: 4px; border-width: 1px; \
-                                       border-color: rgba(70,0,0,255);"
-        )
-        self.txtFunction.setStyleSheet(
-            "background-color: \
-                                       rgba(10,10,10,90); \
-                                       color: rgba(255, 255, 102,255); \
-                                       border-style: solid; \
-                                       border-radius: 4px; border-width: 1px; \
-                                       border-color: rgba(70,0,0,255);"
-        )
-
-
-class FunctionNode(AbstractNodeData):
-    mainWidget: functionWidget
-    _function = None
-
-    def __init__(self, function, interface):
-        super().__init__(numIn=2, numOuts=1, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
-        self.name = "Function"
-        self.resetValue = "def default_function(arg1, arg2):\n    return arg1 + arg2"
-        self.dataInPlugs = []
-        self.dataOutPlugs = []
-        self.createPlugs()
-        if function is None:
-            self.function = self.createFunctionFromString("default_function", self.resetValue)
-        else:
-            try:
-                functionTemp = function.split("(")
-                functionName = functionTemp[0].replace("def ", "").strip()
-                self.function = self.createFunctionFromString(functionName, function)
-            except Exception as e:
-                print(e)
-        self.args = []
-        self.kwargs = {}
-
-    @property
-    def function(self):
-        return self._function
-
-    @function.setter
-    def function(self, function):
-        self._function = function
-
-    def createFunctionFromString(self, name, functionString):
-        functionCode = f"{functionString}"
-        functionGlobals = {}
-        exec(functionCode, functionGlobals)
-        return functionGlobals[name]
-
-    def calculate(self):
-        """
-        La funzione calculate di AbstractNodeData viene
-        chiamata quando si vuole calcolare il nuovo valore dei plugs di output del nodo.
-        :return:
-        """
-        returnString = f"{self.title} "
-        for i, outPlug in enumerate(self.dataOutPlugs):
-            outPlug.value = self.calculateOutput(i)
-            returnString += f"{outPlug.name} = {outPlug.value}"
-            if outPlug.connection:
-                connection = outPlug.connection
-                endNode = outPlug.connection.endNode
-                index = connection.endPlug.plugData.index
-                endNode.changeInputValue(index, outPlug.value, None)
-        try:
-            self.nodeInterface.nodeGraphic.updateTextValue()
-        except Exception as e:
-            print(e)
-
-    def calculateOutput(self, outIndex: int):  # sourcery skip: assign-if-exp
-        functionCode = self.mainWidget.txtFunction.toPlainText()
-        functionTemp = functionCode.split("(")
-        functionName = functionTemp[0].replace("def ", "").strip()
-        q = self.createFunctionFromString(functionName, functionCode)
-
-        if self.dataInPlugs[0].connectedWith:
-            arg1 = self.dataInPlugs[0].value
-        else:
-            arg1 = 0
-        if self.dataInPlugs[1].connectedWith:
-            arg2 = self.dataInPlugs[1].value
-        else:
-            arg2 = 1
-        self.dataOutPlugs[outIndex].value = q(arg1, arg2)
-        return self.dataOutPlugs[outIndex].value
-
-    def updateText(self, value):
-        self.mainWidget.lineEdit.setText(str(value))
-
-    def redefineGraphics(self):
-        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
-        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
-        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
-        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
-        backgroundColor = generateColorVariation().returnColor(255, 113, 170)
-        print(f"{backgroundColor.red()}, {backgroundColor.green()}, {backgroundColor.blue()}")
-        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
-        self.createProxyWidget()
-        width = 400
-        height = 250
-        self.nodeInterface.nodeGraphic.redesign(width, height)
-        self.nodeInterface.nodeGraphic.proxyWidget.setMinimumWidth(width - 20)
-        self.nodeInterface.nodeGraphic.proxyWidget.setMaximumWidth(width - 20)
-        self.nodeInterface.nodeGraphic.proxyWidget.setMinimumHeight(height - 100)
-        self.nodeInterface.nodeGraphic.proxyWidget.setMaximumHeight(height - 100)
-        x = 10
-        self.nodeInterface.nodeGraphic.proxyWidget.setMaximumWidth(width - 20)
-        y = height - self.nodeInterface.nodeGraphic.proxyWidget.size().height() - 5
-        self.nodeInterface.nodeGraphic.proxyWidget.setPos(x, y)
-
-    def createProxyWidget(self):
-        self.mainWidget = functionWidget(self)
-        self.nodeInterface.nodeGraphic.setProxyWidget(self.mainWidget)
-        self.mainWidget.txtFunction.setPlainText(str(self.resetValue))
-
-
-class CallNode(AbstractNodeData):
-    def __init__(self, name: str, interface):
-        super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.name = name
-        self.resetValue = False
-        self.dataInPlugs = []
-        self.dataOutPlugs = []
-        self.createPlugs()
-
-    def calculateOutput(self, outIndex: int) -> any:
-        input_value = self.dataInPlugs[0].value
-        result = getattr(input_value, self.name)()
-        self.dataOutPlugs[outIndex].value = result
-        return result
-
-    def redefineGraphics(self):
-        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
-        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
-        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
-        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
-        backgroundColor = generateColorVariation().returnColor(255, 244, 52, percentage=80)
-        print(f"{backgroundColor.red()}, {backgroundColor.green()}, {backgroundColor.blue()}")
-        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
-        self.createProxyWidget()
-        self.nodeInterface.nodeGraphic.redesign(120, 80)
-
-    def createProxyWidget(self):
-        self.lineEdit = QLineEdit()
-        self.lineEdit.setStyleSheet(
-            "background-color: \
-                                       rgba(10,10,10,90); \
-                                       color: rgba(255, 255, 102,255); \
-                                       border-style: solid; \
-                                       border-radius: 4px; border-width: 1px; \
-                                       border-color: rgba(70,0,0,255);"
-        )
-        self.lineEdit.returnPressed.connect(self.returnName)
-        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
-        self.lineEdit.setText(str(self.resetValue))
-
-    def returnName(self):
-        self.changeInputValue(0, int(self.lineEdit.text()))
-
-    def updateText(self, value):
-        self.lineEdit.setText(str(value))
-
-
-class VariableNode(AbstractNodeData):
-    def __init__(self, name: str, value: any, interface):
-        super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.name = name
-        self.resetValue = value
-        self._value = value
-        self.dataInPlugs = []
-        self.dataOutPlugs = []
-        self.createPlugs()
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, value: any):
-        self._value = value
-
-    def calculateOutput(self, outIndex: int) -> any:
-        self.dataOutPlugs[outIndex].value = self.value
-        return self.value
-
-    def redefineGraphics(self):
-        borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
-        self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
-        borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
-        self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
-        backgroundColor = generateColorVariation().returnColor(255, 255, 213)
-        print(f"{backgroundColor.red()}, {backgroundColor.green()}, {backgroundColor.blue()}")
-        self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
-        self.createProxyWidget()
-        self.nodeInterface.nodeGraphic.redesign(120, 80)
-
-    def createProxyWidget(self):
-        self.lineEdit = QLineEdit()
-        self.lineEdit.setStyleSheet(
-            "background-color: \
-                                       rgba(10,10,10,90); \
-                                       color: rgba(255, 255, 102,255); \
-                                       border-style: solid; \
-                                       border-radius: 4px; border-width: 1px; \
-                                       border-color: rgba(70,0,0,255);"
-        )
-        self.lineEdit.returnPressed.connect(self.returnName)
-        self.nodeInterface.nodeGraphic.setProxyWidget(self.lineEdit)
-        self.lineEdit.setText(str(self.resetValue))
-
-    def returnName(self):
-        self.changeInputValue(0, int(self.lineEdit.text()))
-
-    def updateText(self, value):
-        self.lineEdit.setText(str(value))
-
-
-class ForNode(AbstractNodeData):
-    def __init__(self, interface=None):
-        super().__init__(numIn=3, numOuts=1, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
+class ForLoopNode(AbstractNodeData):
+    def __init__(self, start: int, end: int, step: int = 1, interface=None):
+        super().__init__(numIn=1, numOuts=2, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
         self.name = "ForLoopNode"
         self.resetValue = False
         self.dataInPlugs = []
         self.dataOutPlugs = []
         self.createPlugs()
+        self.changeInputValue(0, self.resetValue)
+        self.start = start
+        self.end = end
+        self.step = step
+        self.currentValue = start
 
-    def calculateOutput(self, outIndex: int):
-        iterable = self.dataInPlugs[0].value
-        function = self.dataInPlugs[1].value
-        accumulator = self.dataInPlugs[2].value
-        for value in iterable:
-            accumulator = function(accumulator, value)
-        self.dataOutPlugs[outIndex].value = accumulator
-        return self.dataOutPlugs[outIndex].value
+    def calculateOutput(self, outIndex: int) -> Union[int, float]:
+        if outIndex == 0:  # l'uscita 0 indica se il ciclo è ancora valido
+            return 1 if self.currentValue < self.end else 0
+        else:  # l'uscita 1 indica il valore corrente del ciclo
+            return self.currentValue
+
+    def calculate(self):
+        self.currentValue += self.step
+        if self.currentValue >= self.end:
+            self.currentValue = self.start
+        super().calculate()  # esegue il calcolo delle uscite come al solito
 
     def redefineGraphics(self):
         borderColorDefault = generateColorVariation().returnColor(255, 204, 0)
         self.nodeInterface.nodeGraphic.borderColorDefault = borderColorDefault
         borderColorSelectColor = generateColorVariation().returnColor(255, 0, 0)
         self.nodeInterface.nodeGraphic.borderColorSelect = borderColorSelectColor
-        backgroundColor = generateColorVariation().returnColor(255, 244, 52, percentage=80)
-        print(f"{backgroundColor.red()}, {backgroundColor.green()}, {backgroundColor.blue()}")
+        backgroundColor = generateColorVariation().returnColor(83, 47, 252)
         self.nodeInterface.nodeGraphic.backGroundColor = backgroundColor
         self.createProxyWidget()
         self.nodeInterface.nodeGraphic.redesign(120, 80)
-        self.nodeInterface.nodeGraphic.changeTextToInPlug(0, "iterable")
-        self.nodeInterface.nodeGraphic.changeTextToInPlug(1, "function")
-        self.nodeInterface.nodeGraphic.changeTextToInPlug(2, "accumulator")
 
     def createProxyWidget(self):
         self.lineEdit = QLineEdit()
@@ -1017,3 +791,45 @@ class ForNode(AbstractNodeData):
 
     def updateText(self, value):
         self.lineEdit.setText(str(value))
+
+
+if __name__ == "__main__":
+    # Crea alcuni nodi
+    number1 = NumberNode(10)
+    number2 = NumberNode(20)
+    sum_node = SumNode()
+    print(number1)
+    print(number2)
+
+    # print_node = PrintNode()
+
+    # Collega i nodi tra loro
+    number1.connect(sum_node, 0, 0)
+    number2.connect(sum_node, 1, 0)
+    print(sum_node)
+    number1.disconnect(sum_node, 0, 0)
+    number2.disconnect(sum_node, 1, 0)
+
+    prod = ProductNode()
+    number1.connect(prod, 0, 0)
+    number2.connect(prod, 1, 0)
+    print(prod)
+
+    number1.disconnect(prod, 0, 0)
+    number2.disconnect(prod, 1, 0)
+
+    number1.changeInputValue(0, 2)
+    number2.changeInputValue(0, 2)
+
+    exp = ExpNode()
+    number1.connect(exp, 0, 0)
+    number2.connect(exp, 1, 0)
+    print(exp)
+
+    # crea il nodo For Loop che itera da 0 a 5 con passo 1
+    forLoopNode = ForLoopNode(0, 5)
+
+    # connetti un nodo che stampa il valore corrente del ciclo all'uscita 1 del nodo For Loop
+    # printNode = PrintNode()
+    # forLoopNode.connect(printNode, 0, 1)
+    print(forLoopNode)

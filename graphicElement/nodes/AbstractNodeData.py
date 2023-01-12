@@ -91,6 +91,7 @@ class AbstractNodeData:
         il nodo chiama la funzione notifyToObserver(),
         che notifica a tutti i nodi osservatori che il valore del nodo è cambiato,
         in modo da permettergli di aggiornare i loro valori di conseguenza.
+        :param boolean:
         :param inputIndex: Indice del pLug in ingresso da cambiare
         :param value: valore da cambiare
         :return:
@@ -123,7 +124,6 @@ class AbstractNodeData:
                 print(f"{returnString} outPlug is connected!")
                 connection = outPlug.connection
                 print(f"connected Plug is: {connection.endPlug.plugData.name} = {connection.endPlug.plugData.value}")
-
                 endNode = outPlug.connection.endNode
                 print(endNode.title)
 
@@ -132,7 +132,9 @@ class AbstractNodeData:
         try:
             self.nodeInterface.nodeGraphic.updateTextValue()
         except Exception as e:
+            print("Exception from calculate")
             print(e)
+            print("*"*20)
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         """

@@ -34,7 +34,8 @@ su disco e successivamente caricato
 class canvas(QWidget):
     node_name_list = ["NumberNode", "StringNode", "ListNode", "DictNode", "SumNode",
                       "ProductNode", "PowerNode", "DivisionNode", "RemainderNode",
-                      "PrintNode", "ReplaceNode", "ConcatNode", "IfNode", "ForLoopNode"]
+                      "PrintNode", "ReplaceNode", "ConcatNode", "IfNode", "ForNode",
+                      "FunctionNode", "CallNode", "VariableNode"]
     mainLayout: QLayout
     graphicView: graphicViewOverride
     graphicScene: graphicSceneOverride
@@ -125,6 +126,12 @@ class canvas(QWidget):
             node = AbstractNodeInterface(nodeName, value=x, view=self)
         elif "DictNode" in nodeName:
             node = AbstractNodeInterface(nodeName, value="", view=self)
+        elif "CallNode" in nodeName:
+            node = AbstractNodeInterface(nodeName, name=nodeName, view=self)
+        elif "VariableNode" in nodeName:
+            node = AbstractNodeInterface(nodeName, value=x, name=nodeName, view=self)
+        elif "Function" in nodeName:
+            node = AbstractNodeInterface(nodeName, function=None, view=self)
         else:
             node = AbstractNodeInterface(nodeName, view=self)
 

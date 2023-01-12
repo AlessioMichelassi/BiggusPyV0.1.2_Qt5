@@ -136,6 +136,9 @@ class AbstractNodeInterface:
         self.nodeData.index = _index
         self.nodeGraphic.setTitle(self.nodeData.title)
 
+    def forceNodeNameOnLoad(self, name: str, index: int):
+        self.nodeData.forceNodeNameOnLoad(name, index)
+
     def createPlug(self):
         numInputs = self.nodeData.numberOfInputPlugs
         self.nodeGraphic.createPlugsIn(numInputs)
@@ -180,12 +183,17 @@ class AbstractNodeInterface:
         self.nodeGraphic.updateTextValue()
 
     def serialize(self):
+        connections = []
+        for connection in self.nodeData.connection:
+            connections.append(connection.serialize())
+
         dicts = OrderedDict([
-            ('name', self.nodeData.name),
+            ('name', self.nodeData.title),
             ('index', self.nodeData.index),
             ('type', self.type),
             ('pos', (self.nodeGraphic.pos().x(), self.nodeGraphic.pos().y())),
             ('inPlugsNumb', self.nodeData.numberOfInputPlugs),
-            ('outPlugsNumb', self.nodeData.numberOfOutputPlugs)
+            ('outPlugsNumb', self.nodeData.numberOfOutputPlugs),
+            ('connections', connections)
         ])
         return json.dumps(dicts)

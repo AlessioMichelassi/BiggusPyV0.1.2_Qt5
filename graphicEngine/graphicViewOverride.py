@@ -373,8 +373,8 @@ class graphicViewOverride(QGraphicsView):
 
     def deleteObject(self, obj):
         if isinstance(obj, Connection):
-            obj.startPlug.plugData.resetValue()
-            obj.endPlug.plugData.resetValue()
+            obj.inputPlug.plugData.resetValue()
+            obj.inputPlug.plugData.resetValue()
             self.scene().removeItem(obj)
         elif isinstance(obj, AbstractNodeGraphic):
             for connection in obj.nodeData.connection:

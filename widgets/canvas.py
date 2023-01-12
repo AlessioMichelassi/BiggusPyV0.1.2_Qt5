@@ -6,6 +6,7 @@ from PyQt5.QtCore import QPointF
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from graphicElement.connections.Connection import Connection
 from graphicElement.nodes.AbstractNodeInterface import *
 from graphicEngine.graphicViewOverride import graphicViewOverride
 from graphicEngine.graphicsSceneOverride import graphicSceneOverride
@@ -136,6 +137,7 @@ class canvas(QWidget):
             node = AbstractNodeInterface(nodeName, view=self)
 
         self.addNodeToTheScene(node, centerPoint)
+        return node
 
     def addNodeToTheScene(self, nodeInterface, mousePos):
         index = 0
@@ -172,15 +174,46 @@ class canvas(QWidget):
         nodes = deserialized['Nodes']
         for node in nodes:
             self.deserializeNode(node)
+        for node in nodes:
+            self.deserializeConnections(node)
 
     def deserializeNode(self, serializedJsonDictionary):
         deserialized = json.loads(serializedJsonDictionary)
+        print(json.dumps(deserialized, indent=4))
         _name = deserialized["name"]
         _index = deserialized["index"]
         _type = deserialized["type"]
         _pos = deserialized["pos"]
         _inPlugsNumb = deserialized["inPlugsNumb"]
         _outPlugsNumb = deserialized["outPlugsNumb"]
-        node = AbstractNodeInterface(_type, value=10, view=self.graphicView)
         pos = QPointF(float(_pos[0]), float(_pos[1]))
-        self.addNodeToTheScene(node, pos)
+        node = self.createNodeFromDialog(_type, pos)
+        node.forceNodeNameOnLoad(_name, _index)
+
+    def deserializeConnections(self, serializedJsonDictionary):
+        deserialized = json.loads(serializedJsonDictionary)
+        connections = deserialized["connections"]
+        for connection in connections:
+            self.deserializeConnection(connection)
+
+    def deserializeConnection(self, json_data):
+        # sourcery skip: list-comprehension
+        _connection = json.loads(json_data)
+        input_node_index = _connection["inputNodeName"]
+        inPlugIndex = int(_connection["inputPlug"])
+        output_node_index = _connection["outputNodeName"]
+        outPlugIndex = int(_connection["outputPlug"])
+        connect: list['AbstractNodeInterface'] = []
+        # recupera i nodi e i plugs dalle rispettive liste
+        for inNode in self.nodesInTheScene:
+            if inNode.title == input_node_index:
+                connect.append(inNode)
+        for outNode in self.nodesInTheScene:
+            if outNode.title == output_node_index:
+                connect.append(outNode)
+        outPlug: 'plugGraphic' = connect[0].nodeData.dataOutPlugs[outPlugIndex].plugGraphic
+        inPlug: 'plugGraphic' = connect[0].nodeData.dataInPlugs[inPlugIndex].plugGraphic
+
+        connection = Connection(outPlug, inPlug)
+        self.graphicView.scene().addItem(connection)
+        connect[1].connectPlug(connect[0].nodeData, inPlug, outPlug, connection)

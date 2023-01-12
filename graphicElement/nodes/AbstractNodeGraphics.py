@@ -173,16 +173,19 @@ class AbstractNodeGraphic(QGraphicsItem):
             self.proxyWidget.setWidget(_proxyWidget)
             self.txtValue.hide()
 
-    def redesign(self, width, height, type="rect"):
+    def redesign(self, width=None, height=None, type="rect"):
         """
         Basandosi sulle nuove dimensioni del nodo ricalcola la posizione del
         titolo e dei plug.
+        :param type:
         :param width:
         :param height:
         :return:
         """
-        self.width = width
-        self.height = height
+        if width is not None or height is not None:
+            self.width = width
+            self.height = height
+
         self.boundingRect = QRectF(0, 0, self.width, self.height)
         if type == "rect":
             self.designRectangleShape()

@@ -1,5 +1,8 @@
+import json
 import math
 import sys
+from collections import OrderedDict
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -93,3 +96,12 @@ class Connection(QGraphicsItem):
         else:
             painter.setPen(QPen(QColor(250, 50, 50), 3))
         painter.drawLine(self.outputPlug.scenePos(), self.inputPlug.scenePos())
+
+    def serialize(self):
+        dicts = {
+            'inputNodeName': self.inputNode.title,
+            'inputPlug': self.inputPlug.index,
+            'outputNodeName': self.outputNode.title,
+            'outputPlug': self.outputPlug.index,
+        }
+        return json.dumps(dicts)

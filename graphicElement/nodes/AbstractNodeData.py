@@ -24,6 +24,11 @@ class AbstractNodeData:
     def title(self):
         return f"{self.name}_{str(self.index)}"
 
+    def forceNodeNameOnLoad(self, name, index):
+        tempName = name.split("_")
+        self.index = index
+        self.name = tempName[0]
+
     def createPlugs(self):
         for i in range(self.numberOfInputPlugs):
             plugIn = PlugData(i, "In", 0, self)
@@ -51,8 +56,7 @@ class AbstractNodeData:
         if input_index < len(node.dataInPlugs):
             node.dataInPlugs[input_index] = self.dataOutPlugs[output_index]
         else:
-            print(
-                f"{self.title} has an input error. inputIndex was = {input_index} but plugNumb is {len(self.dataInPlugs)}")
+            print(f"{self.title} has an input error. inputIndex was = {input_index} but plugNumb is {len(self.dataInPlugs)}")
             # raise IndexError("Input index out of range.")
 
     def disconnect(self, node: "AbstractNodeData", input_index: int, output_index: int):

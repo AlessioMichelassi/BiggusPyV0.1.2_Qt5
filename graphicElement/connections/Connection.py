@@ -48,47 +48,48 @@ class Arrow(QGraphicsItem):
 
 
 class Connection(QGraphicsItem):
-    def __init__(self, _startPlug, _endPlug, parent=None):
+    """
+    startNode è sempre il nodo che da l'output
+    end
+    """
+    def __init__(self, _outputPlug, _inputPlug, parent=None):
         super().__init__(parent)
-        if "Out" in _startPlug.plugData.name:
-            self.startPlug = _startPlug
-            self.startNode = self.startPlug.nodeGraphic.nodeData
-            self.endPlug = _endPlug
-            self.endNode = self.endPlug.nodeGraphic.nodeData
-        elif "In" in _startPlug.plugData.name:
-            self.startPlug = _endPlug
-            self.startNode = self.startPlug.nodeGraphic.nodeData
-            self.endPlug = _startPlug
-            self.endNode = self.endPlug.nodeGraphic.nodeData
+        if "Out" in _outputPlug.plugData.name:
+            self.outputPlug = _outputPlug
+            self.outputNode = self.outputPlug.nodeGraphic.nodeData
+            self.inputPlug = _inputPlug
+            self.inputNode = self.inputPlug.nodeGraphic.nodeData
+        elif "In" in _outputPlug.plugData.name:
+            self.outputPlug = _inputPlug
+            self.outputNode = self.outputPlug.nodeGraphic.nodeData
+            self.inputPlug = _outputPlug
+            self.inputNode = self.inputPlug.nodeGraphic.nodeData
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setZValue(-1)
         self.connect()
 
-    def canConnect(self, endPlug):
-        return True
-
     def connect(self):
-        startNode = self.startPlug.nodeGraphic
-        endNode = self.endPlug.nodeGraphic
-        startNode.nodeInterface.connectPlug(startNode.nodeData, self.startPlug, endNode.nodeData, self.endPlug, self)
+        outputNode = self.outputPlug.nodeGraphic
+        inputNode = self.inputPlug.nodeGraphic
+        outputNode.nodeInterface.connectPlug(inputNode.nodeData, self.inputPlug, self.outputPlug, self)
 
     def deleteConnection(self):
-        self.startPlug.nodeGraphic.disconnectPlug(self.startPlug.nodeGraphic.nodeData, self.startPlug,
-                                                  self.endPlug.nodeGraphic.nodeData, self.endPlug)
-        self.endPlug.nodeGraphic.disconnectPlug(self.endPlug.nodeGraphic.nodeData, self.endPlug,
-                                                self.startPlug.nodeGraphic.nodeData, self.startPlug)
+        self.outputPlug.nodeGraphic.disconnectPlug(self.outputPlug.nodeGraphic.nodeData, self.outputPlug,
+                                                   self.inputPlug.nodeGraphic.nodeData, self.inputPlug)
+        self.inputPlug.nodeGraphic.disconnectPlug(self.inputPlug.nodeGraphic.nodeData, self.inputPlug,
+                                                  self.outputPlug.nodeGraphic.nodeData, self.outputPlug)
         self.scene().removeItem(self)
 
     def updateGeometry(self):
         # Aggiorna la posizione della connessione in base alla posizione dei plugs di origine e di destinazione
-        self.setLine(QLineF(self.startPlug.scenePos(), self.endPlug.scenePos()))
+        self.setLine(QLineF(self.outputPlug.scenePos(), self.inputPlug.scenePos()))
 
     def boundingRect(self):
-        return QRectF(self.startPlug.scenePos(), self.endPlug.scenePos()).normalized()
+        return QRectF(self.outputPlug.scenePos(), self.inputPlug.scenePos()).normalized()
 
     def paint(self, painter, _QStyleOptionGraphicsItem, widget=None):
         if not self.isSelected():
             painter.setPen(QPen(QColor(0, 20, 20), 3))
         else:
             painter.setPen(QPen(QColor(250, 50, 50), 3))
-        painter.drawLine(self.startPlug.scenePos(), self.endPlug.scenePos())
+        painter.drawLine(self.outputPlug.scenePos(), self.inputPlug.scenePos())

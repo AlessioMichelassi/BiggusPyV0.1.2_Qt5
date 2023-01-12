@@ -1,40 +1,10 @@
-import contextlib
 from typing import *
 
 from graphicElement.plugs.PlugData import PlugData
 
-"""
-La classe AbstractNodeData rappresenta l'interfaccia di base per la gestione dei dati di un nodo di un grafico. 
-
-La classe fornisce i seguenti metodi:
-
-    __init__: 
-                inizializza il nodo con il numero di plugs di input e output e l'interfaccia di input.
-    createPlugs: 
-                crea i plugs di input e output del nodo in base al numero specificato.
-    changeInputValue: 
-                modifica il valore di un plug di input specifico e chiama il metodo calculate per aggiornare 
-                il valore dei plugs di output del nodo.
-    calculate: aggiorna il valore dei plugs di output del nodo in base ai valori dei plugs di input.
-    notifyToObserver: 
-                notifica a tutti i nodi osservatori che il valore del nodo è cambiato, in modo da permettergli 
-                di aggiornare i loro valori di conseguenza.
-
-Inoltre, la classe definisce le seguenti variabili di istanza:
-
-    index: indice del nodo.
-    dataInPlugs: lista di plugs di input del nodo.
-    dataOutPlugs: lista di plugs di output del nodo.
-    resetValue: valore di reset del nodo.
-    isDebugging: indica se il nodo è in modalità debug.
-    name: nome del nodo.
-    interface: interfaccia di input del nodo.
-    numberOfInputPlugs: numero di plugs di input del nodo.
-    numberOfOutputPlugs: numero di plugs di output del nodo.
-"""
-
 
 class AbstractNodeData:
+    isNodeInCreation = True
     index = 0
     dataInPlugs: list[PlugData] = []
     dataOutPlugs: list[PlugData] = []
@@ -62,53 +32,32 @@ class AbstractNodeData:
             plugOut = PlugData(i, "Out", 0, self)
             self.dataOutPlugs.append(plugOut)
 
-    def __str__(self):
-        returnString = f"Print from {self.name}:\n"
-        for i in self.dataInPlugs:
-            returnString += f"{i.name} = {i.value} "
-        for i in self.dataOutPlugs:
-            returnString += f"{i.name} = {i.value} "
-        if self.nodeInterface is not None:
-            return f"{self.nodeInterface.name} InputNumber: {self.numberOfInputPlugs}, OutputNumber {self.numberOfOutputPlugs}"
-        else:
-            return f"{returnString}: InPlugNumber: {self.numberOfInputPlugs}," \
-                   f"OutPlugNumber {self.numberOfOutputPlugs}"
-
     def changeInputValue(self, inputIndex, value, boolean=True):
-        """
-        La funzione changeInputValue viene chiamata quando un plugs
-        di input viene collegato a un altro plugs di output.
-        La funzione riceve in input l'indice del plugs di input
-        del nodo che viene modificato e il valore che deve assumere.
-        Dopodiché assegna il valore al plugs di input e chiama la funzione calculate().
-
-        La funzione calculate() viene implementata in modo diverso per ogni nodo,
-        in quanto ogni nodo può essere utilizzato per effettuare un'operazione differente.
-        In generale, questa funzione viene utilizzata per aggiornare il valore dei plugs
-        di output del nodo in base ai valori dei plugs di input.
-
-        Una volta che il valore dei plugs di output viene aggiornato,
-        il nodo chiama la funzione notifyToObserver(),
-        che notifica a tutti i nodi osservatori che il valore del nodo è cambiato,
-        in modo da permettergli di aggiornare i loro valori di conseguenza.
-        :param boolean:
-        :param inputIndex: Indice del pLug in ingresso da cambiare
-        :param value: valore da cambiare
-        :return:
-        """
         self.dataInPlugs[inputIndex].value = value
-        isDebugging = False
-        if isDebugging:
+        if self.isDebugging:
             print(f"debugging from ChangeInputValue:"
-                  f"{self.name} - changed Input value "
+                  f"{self.title} - changed Input value "
                   f"{self.dataInPlugs[inputIndex].name} "
                   f"= {self.dataInPlugs[inputIndex].value}")
         if boolean:
-            try:
+            if self.isNodeInCreation:
                 self.calculate()
+            else:
+                self.calculate()
+                self.nodeInterface.nodeGraphic.updateTextValue()
                 self.nodeInterface.notifyToObserver()
-            except Exception as e:
-                self.calculate()
+
+    def connect(self, node: "AbstractNodeData", input_index: int, output_index: int):
+        if input_index < len(node.dataInPlugs):
+            node.dataInPlugs[input_index] = self.dataOutPlugs[output_index]
+        else:
+            print(
+                f"{self.title} has an input error. inputIndex was = {input_index} but plugNumb is {len(self.dataInPlugs)}")
+            # raise IndexError("Input index out of range.")
+
+    def disconnect(self, node: "AbstractNodeData", input_index: int, output_index: int):
+        node.dataInPlugs[input_index] = None
+        node.dataOutPlugs[output_index] = None
 
     def calculate(self):
         """
@@ -116,25 +65,23 @@ class AbstractNodeData:
         chiamata quando si vuole calcolare il nuovo valore dei plugs di output del nodo.
         :return:
         """
-        returnString = f"{self.title} "
+        returnString = f"From Calculate: {self.title} "
         for i, outPlug in enumerate(self.dataOutPlugs):
             outPlug.value = self.calculateOutput(i)
             returnString += f"{outPlug.name} = {outPlug.value}"
             if outPlug.connection:
-                print(f"{returnString} outPlug is connected!")
+                returnString += f"{returnString} outPlug is connected!"
                 connection = outPlug.connection
-                print(f"connected Plug is: {connection.endPlug.plugData.name} = {connection.endPlug.plugData.value}")
-                endNode = outPlug.connection.endNode
-                print(endNode.title)
+                returnString += f"connected Plug is: {connection.inputPlug.plugData.name} = {connection.inputPlug.plugData.value}"
+                endNode = outPlug.connection.inputNode
+                returnString += f"endNode: {endNode.title}"
 
-                index = connection.endPlug.plugData.index
+                index = connection.inputPlug.plugData.index
                 endNode.changeInputValue(index, outPlug.value, None)
-        try:
+                returnString += f"changedValue at{index} -> {outPlug.value}"
+                print(returnString)
+        if not self.isNodeInCreation:
             self.nodeInterface.nodeGraphic.updateTextValue()
-        except Exception as e:
-            print("Exception from calculate")
-            print(e)
-            print("*"*20)
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         """

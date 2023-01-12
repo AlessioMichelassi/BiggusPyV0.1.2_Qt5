@@ -730,14 +730,22 @@ class functionWidget(QWidget):
         layout.addWidget(self.lineEdit)
         self.setLayout(layout)
 
-        self.txtFunction.textChanged.connect(self.returnFunction)
         self.setStyleX()
 
-    def returnFunction(self):
-        function_string = self.txtFunction.toPlainText()
-        functionTemp = function_string.split("(")
-        functionName = functionTemp[0].replace("def ", "").strip()
-        self.node.function = self.node.createFunctionFromString(functionName, function_string)
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        contextMenu = QMenu(self)
+        contextMenu.addSection("Function Widget Context Menu")
+        _updateFunction = contextMenu.addAction("Update Function")
+        contextMenu.addSeparator()
+
+        action = contextMenu.exec(self.mapToGlobal(event.pos()))
+
+        if action == _updateFunction:
+            function_string = self.txtFunction.toPlainText()
+            functionTemp = function_string.split("(")
+            functionName = functionTemp[0].replace("def ", "").strip()
+            self.node.function = self.node.createFunctionFromString(functionName, function_string)
+
 
     def updateFunctionText(self, value):
         self.txtFunction.setPlainText(str(value))
@@ -784,6 +792,7 @@ class FunctionNode(AbstractNodeData):
         self.args = []
         self.kwargs = {}
 
+
     @property
     def function(self):
         return self._function
@@ -810,8 +819,8 @@ class FunctionNode(AbstractNodeData):
             returnString += f"{outPlug.name} = {outPlug.value}"
             if outPlug.connection:
                 connection = outPlug.connection
-                endNode = outPlug.connection.endNode
-                index = connection.endPlug.plugData.index
+                endNode = outPlug.connection.inputNode
+                index = connection.inputPlug.plugData.index
                 endNode.changeInputValue(index, outPlug.value, None)
         try:
             self.nodeInterface.nodeGraphic.updateTextValue()

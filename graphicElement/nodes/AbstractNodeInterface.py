@@ -117,6 +117,7 @@ class AbstractNodeInterface:
         self.nodeGraphic.nodeData = self.nodeData
         self.nodeGraphic.nodeInterface = self
         self.createPlug()
+        self.nodeData.isNodeInCreation = False
         if 'value' in kwargs:
             self.nodeGraphic.setValueFromGraphics(kwargs['value'])
 
@@ -158,31 +159,16 @@ class AbstractNodeInterface:
         node_class = getattr(module, className)
         return node_class(*args, interface=_interface, **kwargs)
 
-    def connectPlug(self, startNode: AbstractNodeData, startPlug, endNode: AbstractNodeData, endPlug, connection):
-
-        value = self.nodeData.dataOutPlugs[0].value
-        endNode.changeInputValue(startPlug.plugData.index, value)
-
-        startNode.dataInPlugs[startPlug.index].connectedWith = self.nodeData.dataOutPlugs[0]
-        self.nodeData.dataOutPlugs[0].connectedWith = startNode.dataInPlugs[startPlug.index]
-        self.nodeData.dataOutPlugs[0].connection = connection
-
+    def connectPlug(self, connectedNode: AbstractNodeData, connectedPlug, whichOutPlug, connection):
+        self.nodeData.connect(connectedNode, connectedPlug.index, whichOutPlug.index)
         self.nodeData.connection.append(connection)
-        self.addObservedNode(endNode.nodeInterface)
+        self.nodeData.dataOutPlugs[whichOutPlug.index].connectedWith = connectedPlug
+        self.nodeData.dataOutPlugs[whichOutPlug.index].connection = connection
+        connectedNode.changeInputValue(connectedPlug.index, whichOutPlug.plugData.value)
         self.nodeData.calculate()
 
-    def disconnectPlug(self, _startNode, startPlug, _endNode, endPlug):
-        # sourcery skip: assign-if-exp
-        startNode = _startNode
-        endNode = _endNode
-        if type(_startNode) is AbstractNodeInterface or type(_startNode) is AbstractNodeGraphic:
-            startNode = _startNode.nodeData
-        if type(_endNode) is AbstractNodeInterface or type(_endNode) is AbstractNodeGraphic:
-            endNode = _endNode.nodeData
-
-        startNode.disconnect(endNode, startPlug.index, endPlug.index)
-        value = startNode.resetValue
-        self.nodeGraphic.setValueFromGraphics(value)
+    def disconnectPlug(self, connectedNode: AbstractNodeData, connectedPlug, whichOutPlug):
+       pass
 
     def addObservedNode(self, node):
         self.observer.addObservedNode(node)

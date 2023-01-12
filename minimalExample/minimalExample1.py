@@ -37,9 +37,9 @@ class Arrow(QGraphicsItem):
 
         conn = Connection(self.startPlug, endPlug)
         # Aggiungi la freccia alla scena
-        self.startPlug.plugInterface.connection = conn
+        self.startPlug.plugInterface.inConnection = conn
         self.scene().addItem(conn)
-        endPlug.plugInterface.connection = conn
+        endPlug.plugInterface.inConnection = conn
         return conn
 
     def updatePosition(self, pos):
@@ -73,9 +73,9 @@ class Connection(QGraphicsItem):
 
     def connect(self):
         startNode = self.startPlug.nodeGraphic
-        startNode.connection = startNode
+        startNode.inConnection = startNode
         endNode = self.endPlug.nodeGraphic
-        endNode.connection = endNode
+        endNode.inConnection = endNode
         startNode.nodeGraphic.connectPlug(startNode.nodeData, self.startPlug, endNode.nodeData, self.endPlug)
 
     def deleteConnection(self):
@@ -837,14 +837,14 @@ class graphicViewOverride(QGraphicsView):
 
         for plug in plugs:
             if plug.connectedWith:
-                if plug.connection not in connections:
-                    connections.append(plug.connection)
+                if plug.inConnection not in connections:
+                    connections.append(plug.inConnection)
                 plug.disconnect()
         plugs = node.nodeData.dataOutPlugs
         for plug in plugs:
             if plug.connectedWith:
-                if plug.connection not in connections:
-                    connections.append(plug.connection)
+                if plug.inConnection not in connections:
+                    connections.append(plug.inConnection)
                 plug.disconnect()
         for connection in connections:
             self.scene().removeItem(connection)

@@ -192,9 +192,15 @@ class canvas(QWidget):
 
     def deserializeConnections(self, serializedJsonDictionary):
         deserialized = json.loads(serializedJsonDictionary)
+        print(json.dumps(deserialized, indent=4))
         connections = deserialized["connections"]
+        nodeName = deserialized["name"]
+        for inNode in self.nodesInTheScene:
+            if inNode.title == nodeName:
+                node = inNode
+                break
         for connection in connections:
-            self.deserializeConnection(connection)
+            node.deserializeConnection(connection)
 
     def deserializeConnection(self, json_data):
         # sourcery skip: list-comprehension
@@ -211,9 +217,22 @@ class canvas(QWidget):
         for outNode in self.nodesInTheScene:
             if outNode.title == output_node_index:
                 connect.append(outNode)
-        outPlug: 'plugGraphic' = connect[0].nodeData.dataOutPlugs[outPlugIndex].plugGraphic
-        inPlug: 'plugGraphic' = connect[0].nodeData.dataInPlugs[inPlugIndex].plugGraphic
+
+        outputNode = connect[1]
+        inputNode = connect[0]
+
+        outPlug: 'plugGraphic' = outputNode.nodeData.dataOutPlugs[outPlugIndex].plugGraphic
+        inPlug: 'plugGraphic' = inputNode.nodeData.dataInPlugs[inPlugIndex].plugGraphic
 
         connection = Connection(outPlug, inPlug)
-        self.graphicView.scene().addItem(connection)
-        connect[1].connectPlug(connect[0].nodeData, inPlug, outPlug, connection)
+        print(f"{self.indexDeserialize}: out node is {outputNode.title} input node is {inputNode.title}")
+        print(f"trying connect {outputNode.title} {outPlug.name} -> {inputNode.title} -> {outPlug.name}")
+        if connection not in outputNode.nodeData.inConnection:
+            self.graphicView.scene().addItem(connection)
+            outputNode.connectPlug(connect[0].nodeData, inPlug, outPlug, connection)
+            print("connected!")
+            self.indexDeserialize += 1
+        else:
+            print(f"{self.indexDeserialize}: {outputNode.title} not connected with {inputNode.title}")
+            print(outputNode.nodeData.inConnection)
+            self.indexDeserialize += 1

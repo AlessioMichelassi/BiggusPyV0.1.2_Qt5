@@ -9,8 +9,9 @@ class AbstractNodeData:
     dataInPlugs: list[PlugData] = []
     dataOutPlugs: list[PlugData] = []
     resetValue = None
-    isDebugging = True
-    connection: list['Connection'] = []
+    isDebugging = False
+    inConnection: list['Connection'] = []
+    outConnection: list['inConnection'] = []
 
     def __init__(self, numIn: int, numOuts: int, interface):
         self.name = "abstractDataNode"
@@ -60,8 +61,8 @@ class AbstractNodeData:
             # raise IndexError("Input index out of range.")
 
     def disconnect(self, node: "AbstractNodeData", input_index: int, output_index: int):
-        node.dataInPlugs[input_index] = None
-        node.dataOutPlugs[output_index] = None
+        node.dataInPlugs[input_index] = node.resetValue
+        node.dataOutPlugs[output_index] = node.calculateOutput(output_index)
 
     def calculate(self):
         """
@@ -83,7 +84,8 @@ class AbstractNodeData:
                 index = connection.inputPlug.plugData.index
                 endNode.changeInputValue(index, outPlug.value, None)
                 returnString += f"changedValue at{index} -> {outPlug.value}"
-                print(returnString)
+                if self.isDebugging:
+                    print(returnString)
         if not self.isNodeInCreation:
             self.nodeInterface.nodeGraphic.updateTextValue()
 

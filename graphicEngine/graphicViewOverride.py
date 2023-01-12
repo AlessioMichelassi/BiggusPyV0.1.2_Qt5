@@ -377,7 +377,7 @@ class graphicViewOverride(QGraphicsView):
             obj.inputPlug.plugData.resetValue()
             self.scene().removeItem(obj)
         elif isinstance(obj, AbstractNodeGraphic):
-            for connection in obj.nodeData.connection:
+            for connection in obj.nodeData.inConnection:
                 self.scene().removeItem(connection)
             self.scene().removeItem(obj)
         elif len(self.scene().selectedItems()) > 1:

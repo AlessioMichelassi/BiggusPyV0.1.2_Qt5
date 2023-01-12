@@ -1,6 +1,7 @@
 import json
 from collections import OrderedDict
 
+from graphicElement.connections.Connection import Connection
 from graphicElement.nodes.pythonNodes.pythonNodeData import *
 from graphicElement.nodes.AbstractNodeGraphics import AbstractNodeGraphic
 import importlib
@@ -106,14 +107,15 @@ class AbstractNodeInterface:
     nodeData: AbstractNodeData
     observer: Observer
 
-    def __init__(self, className: str, *args, view, **kwargs):
+    def __init__(self, className: str, *args, view: 'graphicViewOverride', **kwargs):
 
         # Crea l'istanza del nodoData
         self.type = className
         self.nodeData = self.createNode(className, *args, _interface=self, **kwargs)
-        self.graphicView = view
+        self.canvas = view
+        self.graphicView = self.canvas.graphicView
         # Crea l'istanza del nodoGrafico
-        self.nodeGraphic = AbstractNodeGraphic(view, self)
+        self.nodeGraphic = AbstractNodeGraphic(self.graphicView, self)
         self.nodeGraphic.nodeData = self.nodeData
         self.nodeGraphic.nodeInterface = self
         self.createPlug()
@@ -164,7 +166,12 @@ class AbstractNodeInterface:
 
     def connectPlug(self, connectedNode: AbstractNodeData, connectedPlug, whichOutPlug, connection):
         self.nodeData.connect(connectedNode, connectedPlug.index, whichOutPlug.index)
-        self.nodeData.connection.append(connection)
+
+        if "Out" in whichOutPlug.name:
+            if connection not in self.nodeData.outConnection:
+                self.nodeData.outConnection.append(connection)
+        else:
+            self.nodeData.inConnection.append(connection)
         self.nodeData.dataOutPlugs[whichOutPlug.index].connectedWith = connectedPlug
         self.nodeData.dataOutPlugs[whichOutPlug.index].connection = connection
         connectedNode.changeInputValue(connectedPlug.index, whichOutPlug.plugData.value)
@@ -184,7 +191,7 @@ class AbstractNodeInterface:
 
     def serialize(self):
         connections = []
-        for connection in self.nodeData.connection:
+        for connection in self.nodeData.outConnection:
             connections.append(connection.serialize())
 
         dicts = OrderedDict([
@@ -197,3 +204,38 @@ class AbstractNodeInterface:
             ('connections', connections)
         ])
         return json.dumps(dicts)
+
+    indexDeserialize = 0
+
+    def deserializeConnection(self, json_data):
+        # sourcery skip: All
+        _connection = json.loads(json_data)
+        inputNodeName = _connection["inputNodeName"]
+        inPlugIndex = int(_connection["inputPlug"])
+        outputNodeName = _connection["outputNodeName"]
+        outPlugIndex = int(_connection["outputPlug"])
+        connect: list['AbstractNodeInterface'] = []
+        # recupera i nodi e i plugs dalle rispettive liste
+        for inNode in self.canvas.nodesInTheScene:
+            if inNode.title == inputNodeName:
+                connect.append(inNode)
+
+        if self.title == outputNodeName:
+            outputNode = self
+            inputNode = connect[0]
+
+            outPlug: 'plugGraphic' = outputNode.nodeData.dataOutPlugs[outPlugIndex].plugGraphic
+            inPlug: 'plugGraphic' = inputNode.nodeData.dataInPlugs[inPlugIndex].plugGraphic
+
+            connection = Connection(outPlug, inPlug)
+            print(f"{self.indexDeserialize}: out node is {outputNode.title} input node is {inputNode.title}")
+            print(f"trying connect {outputNode.title} {outPlug.name} -> {inputNode.title} -> {outPlug.name}")
+            if connection not in outputNode.nodeData.inConnection:
+                self.graphicView.scene().addItem(connection)
+                outputNode.connectPlug(connect[0].nodeData, inPlug, outPlug, connection)
+                print("connected!")
+                self.indexDeserialize += 1
+            else:
+                print(f"{self.indexDeserialize}: {outputNode.title} not connected with {inputNode.title}")
+                print(outputNode.nodeData.inConnection)
+                self.indexDeserialize += 1

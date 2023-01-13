@@ -284,7 +284,7 @@ class FunctionNode(AbstractNodeData):
     _function = None
 
     def __init__(self, function, interface):
-        super().__init__(numIn=2, numOuts=1, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
+        super().__init__(numIn=2, numOuts=1, interface=interface)
         self.name = "Function"
         self.resetValue = "def default_function(arg1, arg2):\n    return arg1 + arg2"
         self.dataInPlugs = []

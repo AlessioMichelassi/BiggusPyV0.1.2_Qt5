@@ -746,7 +746,6 @@ class functionWidget(QWidget):
             functionName = functionTemp[0].replace("def ", "").strip()
             self.node.function = self.node.createFunctionFromString(functionName, function_string)
 
-
     def updateFunctionText(self, value):
         self.txtFunction.setPlainText(str(value))
 
@@ -777,21 +776,24 @@ class FunctionNode(AbstractNodeData):
         super().__init__(numIn=2, numOuts=1, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
         self.name = "Function"
         self.resetValue = "def default_function(arg1, arg2):\n    return arg1 + arg2"
+        self.functionString = function
         self.dataInPlugs = []
         self.dataOutPlugs = []
         self.createPlugs()
         if function is None:
-            self.function = self.createFunctionFromString("default_function", self.resetValue)
+            print("function was None")
+            self.functionString = self.resetValue
+            self.function = self.createFunctionFromString("default_function", self.functionString)
         else:
             try:
                 functionTemp = function.split("(")
                 functionName = functionTemp[0].replace("def ", "").strip()
                 self.function = self.createFunctionFromString(functionName, function)
+                self.functionString = function
             except Exception as e:
                 print(e)
         self.args = []
         self.kwargs = {}
-
 
     @property
     def function(self):
@@ -802,10 +804,14 @@ class FunctionNode(AbstractNodeData):
         self._function = function
 
     def createFunctionFromString(self, name, functionString):
-        functionCode = f"{functionString}"
-        functionGlobals = {}
-        exec(functionCode, functionGlobals)
-        return functionGlobals[name]
+        try:
+            functionCode = f"{functionString}"
+            functionGlobals = {}
+            exec(functionCode, functionGlobals)
+            self.functionString = functionCode
+            return functionGlobals[name]
+        except Exception as e:
+            print("this function not working for biggus")
 
     def calculate(self):
         """
@@ -871,7 +877,7 @@ class FunctionNode(AbstractNodeData):
     def createProxyWidget(self):
         self.mainWidget = functionWidget(self)
         self.nodeInterface.nodeGraphic.setProxyWidget(self.mainWidget)
-        self.mainWidget.txtFunction.setPlainText(str(self.resetValue))
+        self.mainWidget.txtFunction.setPlainText(str(self.functionString))
 
 
 class CallNode(AbstractNodeData):

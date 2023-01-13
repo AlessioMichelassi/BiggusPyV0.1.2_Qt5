@@ -93,7 +93,7 @@ class graphicViewOverride(QGraphicsView):
 
     def __init__(self, _graphicScene, parent=None):
         super(graphicViewOverride, self).__init__(parent)
-        self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
+        self.rubberBand = QRubberBand(QRubberBand.Shape.Rectangle, self)
         self.lastCTRLCopyFont = None
         self.lastCTRLCopyColor = None
         self.selectedItem = None
@@ -353,7 +353,6 @@ class graphicViewOverride(QGraphicsView):
             print(code)
             self.canvas.pasteCode(code)
 
-
     ####################################################
     #
     #
@@ -361,6 +360,7 @@ class graphicViewOverride(QGraphicsView):
     #
     #
     ####################################################
+
     def getItemAtClick(self, event):
         """ Ritorna l'oggetto selezionato cliccandoci sopra"""
         pos = event.pos()

@@ -210,6 +210,8 @@ class AbstractNodeInterface:
             ('name', self.nodeData.title),
             ('index', self.nodeData.index),
             ('type', self.type),
+            ('value', self.nodeData.value),
+            ('functionString', self.nodeData.functionString),
             ('pos', (self.nodeGraphic.pos().x(), self.nodeGraphic.pos().y())),
             ('inPlugsNumb', self.nodeData.numberOfInputPlugs),
             ('outPlugsNumb', self.nodeData.numberOfOutputPlugs),

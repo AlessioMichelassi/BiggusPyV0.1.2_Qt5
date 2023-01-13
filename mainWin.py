@@ -35,13 +35,12 @@ class MainWindow(QMainWindow):
         self.home_dir = str(Path.home())
 
     def initUI(self):
-        self.setWindowTitle("BiggusPy(a great Caesar's friend) V0.1.2")
+        self.setWindowTitle("BiggusPy - a very great Caesar's friend - V0.1.2")
         self.setGeometry(100, 100, 800, 600)
         # Imposta il titolo della finestra
-        self.setWindowTitle('BiggusPyV0.1.2')
         # Imposta l'icona della finestra
         self.setWindowIcon(QIcon('graphicElement/imgs/BiggusIcon.ico'))
-        self.canvas = Canvas()
+        self.canvas = Canvas(self)
         self.setCentralWidget(self.canvas)
 
     def createStatusBar(self):
@@ -85,6 +84,9 @@ class MainWindow(QMainWindow):
         editMenu.addAction(cutAction)
 
     def new(self):
+        items = self.canvas.graphicScene.items()
+        for item in items:
+            self.canvas.graphicView.deleteObject(item)
         self.canvas.newScene()
 
     def open(self):
@@ -93,16 +95,16 @@ class MainWindow(QMainWindow):
             with open(fname, "r") as f:
                 data = f.read()
         self.canvas.newScene()
-        self.canvas.filename = fname
+        self.canvas.fileName = fname
         self.canvas.deserialize(data)
 
     def save(self):
         data = self.canvas.saveScene()
-        if self.canvas.filename == "untitled":
+        if self.canvas.fileName == "untitled":
             self.saveAs()
         else:
             try:
-                with open(self.canvas.filename, "w+") as f:
+                with open(self.canvas.fileName, "w+") as f:
                     f.write(data)
             except Exception as e:
                 print(f"there was an error saving file: {e}")
@@ -114,7 +116,7 @@ class MainWindow(QMainWindow):
             try:
                 with open(fname, "w+") as f:
                     f.write(data)
-                self.canvas.filename = fname
+                self.canvas.fileName = fname
             except Exception as e:
                 print(f"there was an error saving file: {e}")
                 print(data)

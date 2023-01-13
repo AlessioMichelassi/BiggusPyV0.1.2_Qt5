@@ -11,6 +11,7 @@ from graphicElement.connections.Connection import Connection
 from graphicElement.nodes.AbstractNodeInterface import *
 from graphicEngine.graphicViewOverride import graphicViewOverride
 from graphicEngine.graphicsSceneOverride import graphicSceneOverride
+from widgets.codeToGraph import CodeToGraph
 
 """
 La classe canvas contiene una serie di metodi che inizializzano l'interfaccia utente, gestiscono il menu 
@@ -44,7 +45,6 @@ class Canvas(QWidget):
     _filename = "untitled"
     sceneWidth = 5000
     sceneHeight = 5000
-    name = "untitled"
     isDebugActive = False
 
     def __init__(self, parent=None):
@@ -63,7 +63,7 @@ class Canvas(QWidget):
     @fileName.setter
     def fileName(self, fileName):
         self._filename = fileName
-        self.mainWin.setWindowTitle(f"'BiggusPyV0.1.2' - {self.fileName}")
+        self.mainWin.setWindowTitle(f"BiggusPyV0.1.2 - {fileName}")
 
     def initUI(self):
         self.graphicScene = graphicSceneOverride()
@@ -131,8 +131,9 @@ class Canvas(QWidget):
         if node_interface:
             self.addNodeToTheScene(node_interface, _mousePosition)
 
-    def createNodeFromDialog(self, nodeName, centerPoint):
-        x = random.randint(1, 100)
+    def createNodeFromDialog(self, nodeName, centerPoint, x=None, string=None):
+        if x is None or x == "":
+            x = random.randint(1, 100)
         try:
             if "Number" in nodeName:
                 node = AbstractNodeInterface(nodeName, value=x, view=self.graphicView)
@@ -143,7 +144,7 @@ class Canvas(QWidget):
             elif "VariableNode" in nodeName:
                 node = AbstractNodeInterface(nodeName, value=x, name=nodeName, view=self.graphicView)
             elif "Function" in nodeName:
-                node = AbstractNodeInterface(nodeName, function=None, view=self.graphicView)
+                node = AbstractNodeInterface(nodeName, function=string, view=self.graphicView)
             else:
                 node = AbstractNodeInterface(nodeName, view=self.graphicView)
 
@@ -214,20 +215,17 @@ class Canvas(QWidget):
         return nodes
 
     def pasteCode(self, code):
-        nodes = self.createNodeFromCode(code)
-        """for node in nodes:
-            x = 200
-            y = 200
-            centerPoint = QPoint(x, y)
-            self.createNodeFromDialog(node, centerPoint)
-            y += 300"""
-        print(nodes)
+        if type(code) is json:
+            print("json code find")
+        else:
+            parser = CodeToGraph(self)
+            parser.parseCode(code)
+            #nodes = parser.create_graph()
+            #print(nodes)
 
     def newScene(self):
         self.graphicScene.clear()
-
-    def loadScene(self):
-        self.newScene()
+        self.fileName = "untitled"
 
     def saveScene(self):
         return self.serialize()
@@ -241,7 +239,7 @@ class Canvas(QWidget):
             listOfDictionarySerialized.append(node.serialize())
 
         dicts = OrderedDict([
-            ('name', self.name),
+            ('name', self.fileName),
             ('sceneWidth', self.sceneWidth),
             ('sceneHeight', self.sceneHeight),
             ('Nodes', listOfDictionarySerialized)])
@@ -249,7 +247,7 @@ class Canvas(QWidget):
 
     def deserialize(self, serializedString):
         deserialized = json.loads(serializedString)
-        self.name = deserialized['name']
+        self.fileName = deserialized['name']
         self.sceneWidth = deserialized['sceneWidth']
         self.sceneHeight = deserialized['sceneHeight']
         nodes = deserialized['Nodes']
@@ -260,20 +258,20 @@ class Canvas(QWidget):
 
     def deserializeNode(self, serializedJsonDictionary):
         deserialized = json.loads(serializedJsonDictionary)
-        print(json.dumps(deserialized, indent=4))
         _name = deserialized["name"]
         _index = deserialized["index"]
         _type = deserialized["type"]
+        _value = deserialized["value"]
+        _string = deserialized["functionString"]
         _pos = deserialized["pos"]
         _inPlugsNumb = deserialized["inPlugsNumb"]
         _outPlugsNumb = deserialized["outPlugsNumb"]
         pos = QPointF(float(_pos[0]), float(_pos[1]))
-        node = self.createNodeFromDialog(_type, pos)
+        node = self.createNodeFromDialog(_type, pos, _value, _string)
         node.forceNodeNameOnLoad(_name, _index)
 
     def deserializeConnections(self, serializedJsonDictionary):
         deserialized = json.loads(serializedJsonDictionary)
-        print(json.dumps(deserialized, indent=4))
         connections = deserialized["connections"]
         nodeName = deserialized["name"]
         for inNode in self.nodesInTheScene:

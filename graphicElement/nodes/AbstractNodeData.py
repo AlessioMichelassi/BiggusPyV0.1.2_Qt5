@@ -10,6 +10,8 @@ class AbstractNodeData:
     dataOutPlugs: list[PlugData] = []
     resetValue = None
     isDebugging = False
+    value = 0
+    functionString = ""
     inConnection: list['Connection'] = []
     outConnection: list['inConnection'] = []
 
@@ -29,6 +31,9 @@ class AbstractNodeData:
         tempName = name.split("_")
         self.index = index
         self.name = tempName[0]
+
+    def madeArbitraryName(self, name):
+        self.name = name
 
     def createPlugs(self):
         for i in range(self.numberOfInputPlugs):

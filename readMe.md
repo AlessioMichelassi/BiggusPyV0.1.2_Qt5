@@ -3,7 +3,7 @@ grafica intuitiva. Ciascun nodo rappresenta un'istruzione python, come una varia
 comando print, che può essere collegato ad altri nodi per creare un flusso di dati e una serie di operazioni. 
 Collegando ad esempio una stringa al nodo print posso stampare sullo schermo la celebre frase "Hello World".
 
-    ![BiggusPy](/graphicElement/imgs/biggusPy.png)
+    ![BiggusPy](graphicElement/imgs/biggusPy.png)
 
 Il programma è ancora in fase embrionale ma è già possibile effettuare alcune operazioni base come collegare, 
 scollegare, cancellare o salvare un progetto e aprire un progetto. BiggusPy è in grado d'interpretare il codice 

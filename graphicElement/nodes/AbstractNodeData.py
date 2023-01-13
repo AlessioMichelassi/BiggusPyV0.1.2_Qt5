@@ -43,6 +43,27 @@ class AbstractNodeData:
             plugOut = PlugData(i, "Out", 0, self)
             self.dataOutPlugs.append(plugOut)
 
+    def addPlug(self, inPlugNumb, outPlugNumb):
+        nodeGraphic = self.nodeInterface.nodeGraphic
+        inIndex = len(self.dataInPlugs)
+        for _ in range(inPlugNumb):
+            # aggiunge il plugData
+            plugIn = PlugData(inIndex, "In", 0, self)
+            self.dataInPlugs.append(plugIn)
+            # aggiunge il plugGraphic
+            plug = plugIn.createGraphicPlug("In", nodeGraphic)
+            nodeGraphic.graphicInputPlugs.append(plug)
+            inIndex += 1
+
+        for i in range(outPlugNumb):
+            # aggiunge il plugData
+            plugOut = PlugData(i, "Out", 0, self)
+            self.dataOutPlugs.append(plugOut)
+            # aggiunge il plugGraphic
+            plug = plugOut.createGraphicPlug("In", nodeGraphic)
+            nodeGraphic.graphicOutputPlugs.append(plug)
+        nodeGraphic.repositionThePlugForDefaultFigure()
+
     def changeInputValue(self, inputIndex, value, boolean=True):
         self.dataInPlugs[inputIndex].value = value
         if self.isDebugging:

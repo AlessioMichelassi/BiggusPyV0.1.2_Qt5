@@ -838,17 +838,19 @@ class FunctionNode(AbstractNodeData):
         functionTemp = functionCode.split("(")
         functionName = functionTemp[0].replace("def ", "").strip()
         q = self.createFunctionFromString(functionName, functionCode)
-
-        if self.dataInPlugs[0].connectedWith:
-            arg1 = self.dataInPlugs[0].value
-        else:
-            arg1 = 0
-        if self.dataInPlugs[1].connectedWith:
-            arg2 = self.dataInPlugs[1].value
-        else:
-            arg2 = 1
-        self.dataOutPlugs[outIndex].value = q(arg1, arg2)
-        return self.dataOutPlugs[outIndex].value
+        try:
+            if self.dataInPlugs[0].connectedWith:
+                arg1 = self.dataInPlugs[0].value
+            else:
+                arg1 = 0
+            if self.dataInPlugs[1].connectedWith:
+                arg2 = self.dataInPlugs[1].value
+            else:
+                arg2 = 1
+            self.dataOutPlugs[outIndex].value = q(arg1, arg2)
+            return self.dataOutPlugs[outIndex].value
+        except Exception as e:
+            a = e
 
     def updateText(self, value):
         self.mainWidget.lineEdit.setText(str(value))

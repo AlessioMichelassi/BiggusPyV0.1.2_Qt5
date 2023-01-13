@@ -13,6 +13,7 @@ class CodeToGraph:
         self.canvas = canvas
         self.nodes = []
         self.node_name_list = self.canvas.node_name_list
+        self.nodeNameCreated = []
 
     def parseCode(self, _code: str):
         # sourcery skip: for-index-underscore
@@ -26,24 +27,21 @@ class CodeToGraph:
                     if isinstance(target, ast.Name) and isinstance(_node.value, ast.Call):
                         variable_name = target.id
                         call_node = self.getNodeByName(_node.value.func.id)
-
                         variableNode = self.canvas.createNodeFromDialog("VariableNode", self.centerPoint)
+                        self.centerPoint = QPoint(self.centerPoint.x() +100, self.centerPoint.y())
                         variableNode.nodeData.madeArbitraryName(variable_name)
                         self.checkIfNameExist(variableNode)
-                        connection = Connection(0, 0, variableNode.nodeGraphic)
-                        variableNode.connectPlug(call_node, 0, 0, connection)
-
+                        variableNode.connectPlug(call_node, 0, 0, None)
                         self.nodes.append(variableNode)
 
                         for i, arg in enumerate(_node.value.args):
                             if isinstance(arg, ast.Num):
                                 numberNode = self.canvas.createNodeFromDialog("NumberNode", self.centerPoint)
+                                self.centerPoint = QPoint(self.centerPoint.x() + 100, self.centerPoint.y())
                                 numberNode.nodeData.madeArbitraryName(variable_name)
-                                numberNode.changeInputValue(0, arg.n)
+                                numberNode.nodeData.changeInputValue(0, arg.n)
                                 self.checkIfNameExist(numberNode)
-                                connection = Connection(0, 0, numberNode.nodeGraphic)
-                                numberNode.connectPlug(call_node, 0, 0, connection)
-
+                                numberNode.connectPlug(call_node, 0, 0, None)
                                 self.nodes.append(numberNode)
 
     def checkIfNameExist(self, _node):
@@ -54,7 +52,7 @@ class CodeToGraph:
     def getNodeByName(self, name: str):
         # sourcery skip: use-next
         for _node in self.nodes:
-            if _node.name == name:
+            if _node.nodeData.name == name:
                 return _node
         return None
 
@@ -74,6 +72,8 @@ class CodeToGraph:
             returnCode = returnCode.replace("    ", "\n    ")
 
             functionNode = self.canvas.createNodeFromDialog("FunctionNode", self.centerPoint)
+            self.centerPoint = QPoint(self.centerPoint.x() + 500, self.centerPoint.y())
+
             functionNode.nodeData.madeArbitraryName(_node.name)
             self.checkIfNameExist(functionNode)
             functionNode.nodeData.functionString = returnCode
@@ -84,6 +84,9 @@ class CodeToGraph:
             function_node.numberOfOutputPlugs = 1
             function_node.createPlugs()
             """
+            plugLeft = len(_node.args.args) - len(functionNode.nodeData.dataInPlugs)
+            if plugLeft > 0:
+                functionNode.nodeData.addPlug(plugLeft, 0)
             self.nodes.append(functionNode)
             self.node_name_list.append(functionNode.title)
             remainingCode = originalCode.replace(returnCode, "")

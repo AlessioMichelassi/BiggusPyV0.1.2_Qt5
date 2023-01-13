@@ -177,17 +177,37 @@ class AbstractNodeInterface:
             return node_class(*args, interface=_interface, **kwargs)
 
     def connectPlug(self, connectedNode: AbstractNodeData, connectedPlug, whichOutPlug, connection):
-        self.nodeData.connect(connectedNode, connectedPlug.index, whichOutPlug.index)
-
-        if "Out" in whichOutPlug.name:
-            if connection not in self.nodeData.outConnection:
-                self.nodeData.outConnection.append(connection)
+        if connection is None:
+            self.connectPlugWithNoneConnection(connectedNode, connectedPlug, whichOutPlug)
         else:
-            self.nodeData.inConnection.append(connection)
-        self.nodeData.dataOutPlugs[whichOutPlug.index].connectedWith = connectedPlug
-        self.nodeData.dataOutPlugs[whichOutPlug.index].connection = connection
-        connectedNode.changeInputValue(connectedPlug.index, whichOutPlug.plugData.value)
-        self.nodeData.calculate()
+            self.nodeData.connect(connectedNode, connectedPlug.index, whichOutPlug.index)
+
+            if "Out" in whichOutPlug.name:
+                if connection not in self.nodeData.outConnection:
+                    self.nodeData.outConnection.append(connection)
+            else:
+                self.nodeData.inConnection.append(connection)
+            self.nodeData.dataOutPlugs[whichOutPlug.index].connectedWith = connectedPlug
+            self.nodeData.dataOutPlugs[whichOutPlug.index].connection = connection
+            connectedNode.changeInputValue(connectedPlug.index, whichOutPlug.plugData.value)
+            self.nodeData.calculate()
+
+    def connectPlugWithNoneConnection(self, connectedNode, connectedPlug, whichOutPlug):
+            # accade quando si copia e incolla un codice altrimenti
+            # la connection viene definita se si trascina una freccia da un plug altro
+            print(connectedNode)
+            print(connectedPlug)
+            print(whichOutPlug)
+            inPlug = connectedNode.nodeData.dataInPlugs[connectedPlug].plugGraphic
+            connection = Connection(self.nodeData.dataOutPlugs[whichOutPlug].plugGraphic, inPlug, self.nodeGraphic)
+            self.graphicView.scene().addItem(connection)
+            self.nodeData.connect(connectedNode.nodeData, connectedPlug, whichOutPlug)
+
+            self.nodeData.dataOutPlugs[whichOutPlug].connectedWith = inPlug.plugData
+            self.nodeData.dataOutPlugs[whichOutPlug].connection = connection
+            outPlug = self.nodeData.dataInPlugs[connectedPlug].plugGraphic
+            connectedNode.nodeData.changeInputValue(connectedPlug, outPlug.plugData.value)
+            self.nodeData.calculate()
 
     def disconnectPlug(self, connectedNode: AbstractNodeData, connectedPlug, whichOutPlug):
        pass

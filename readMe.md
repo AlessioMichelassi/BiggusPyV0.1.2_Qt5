@@ -3,23 +3,23 @@ grafica intuitiva. Ciascun nodo rappresenta un'istruzione python, come una varia
 comando print, che può essere collegato ad altri nodi per creare un flusso di dati e una serie di operazioni. 
 Collegando ad esempio una stringa al nodo print posso stampare sullo schermo la celebre frase "Hello World".
 
-![biggusPy](https://user-images.githubusercontent.com/59560406/212428865-288e6843-923e-41ff-b55b-65ede0b39aea.png)
+https://github.com/AlessioMichelassi/BiggusPyV0.1.2_Qt5/blob/4cc3cc678859a6ee172640f53c8c59bb682a3f47/graphicElement/imgs/biggusPy.png
 
 Il programma è ancora in fase embrionale ma è già possibile effettuare alcune operazioni base come collegare, 
-scollegare, cancellare o salvare e aprire un progetto. BiggusPy è in grado d'interpretare il codice 
+scollegare, cancellare o salvare un progetto e aprire un progetto. BiggusPy è in grado d'interpretare il codice 
 python scritto in modo tradizionale e creare una struttura di nodi corrispondente, rendendo la transizione 
 dalla programmazione testuale alla programmazione visiva più semplice e l'obbiettivo è quello di poter esportare 
 il progetto sviluppato in BiggusPy in un codice python tradizionale per la condivisione o la distribuzione.
 
 E' sicuramente un modo diverso di visualizzare il codice e ha il vantaggio di far guardare il proprio progetto 
-da un punto di vista diverso, questo in molte occasioni, si traduce in un debugging più avanzato perchè 
-visualizzare il codice da un'altra prospettiva permette di accorgersi errori che potrebbero essere difficili 
+da un punto di vista diverso e questo in molte occasioni, si traduce in un debugging più avanzato anche perchè 
+il nuo modo di visualizzare il codice permette di vedere eventuali errori che potrebbero essere difficili 
 da individuare con i sistemi di programmazione tradizionali. Ad esempio, la connessione tra i nodi rende 
 immediatamente evidente se si stanno passando parametri sbagliati in una funzione o se si sta utilizzando 
 un oggetto invece di un altro. Questo rende BiggusPy uno strumento potente per la risoluzione degli errori 
 e per la creazione di codice pulito e ben strutturato.
 
-Alcuni nodi sono già presenti nel menù contestuale quindi, per poterli inserire basta premere il tasto destro e 
+Alcuni nodi sono presenti nel menù contestuale quindi, per poterli inserire basta premere il tasto destro e 
 selezionare il nodo da inserire dal menu. Non sono presenti ancora tutti i comandi di Python, però ce ne sono già 
 alcuni che permettono di creare un'ampia gamma di esempi. Un altro modo Per inserire nodi nella scena è usando
 il tasto tab, scrivere il nome del nodo, premere invio e boom, il nodo sarà pronto li ad essere collegato. 

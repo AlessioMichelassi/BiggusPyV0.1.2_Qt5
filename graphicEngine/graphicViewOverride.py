@@ -1,6 +1,7 @@
 import typing
 
 from graphicElement.nodes.AbstractNodeGraphics import *
+import clipboard
 
 """La classe graphicViewOverride estende la classe QGraphicsView di PyQt5 e sovrascrive alcuni dei suoi metodi per 
 fornire funzionalità aggiuntive.
@@ -105,6 +106,7 @@ class graphicViewOverride(QGraphicsView):
         self.centerOn(CENTER_ON[0], CENTER_ON[1])
         self.scaleScene(CANVAS_SCALE)
 
+
     ####################################################
     #
     #
@@ -127,10 +129,10 @@ class graphicViewOverride(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
 
     def event(self, event):
-        if event.type() == QEvent.KeyPress:
+        if event.type() == QEvent.Type.KeyPress:
 
             if not self.isTabWindowsOpen:
-                if event.key() == Qt.Key_Tab:
+                if event.key() == Qt.Key.Key_Tab:
                     self.isTabWindowsOpen = True
                     self.createNode()
         return super().event(event)
@@ -346,8 +348,11 @@ class graphicViewOverride(QGraphicsView):
                 print("This override copy function")
 
         elif event.key() == Qt.Key.Key_V:
-            if self.selectedItem:
-                print("this will override paste function")
+            print("this will override paste function")
+            code = clipboard.paste()
+            print(code)
+            self.canvas.pasteCode(code)
+
 
     ####################################################
     #

@@ -6,6 +6,8 @@ from graphicElement.nodes.pythonNodes.pythonNodeData import *
 from graphicElement.nodes.AbstractNodeGraphics import AbstractNodeGraphic
 import importlib
 
+from graphicEngine.graphicViewOverride import graphicViewOverride
+
 """
 La classe AbstractNodeInterface rappresenta l'interfaccia di un nodo di un grafico a nodi.
 
@@ -112,8 +114,13 @@ class AbstractNodeInterface:
         # Crea l'istanza del nodoData
         self.type = className
         self.nodeData = self.createNode(className, *args, _interface=self, **kwargs)
-        self.canvas = view
-        self.graphicView = self.canvas.graphicView
+        print(type(view))
+        if isinstance(view, type('Canvas')):
+            self.canvas = view
+            self.graphicView = self.canvas.graphicView
+        elif isinstance(view, graphicViewOverride):
+            self.graphicView = view
+            self.canvas = self.graphicView.canvas
         # Crea l'istanza del nodoGrafico
         self.nodeGraphic = AbstractNodeGraphic(self.graphicView, self)
         self.nodeGraphic.nodeData = self.nodeData
@@ -161,8 +168,13 @@ class AbstractNodeInterface:
         :return:
         """
         module = importlib.import_module("graphicElement.nodes.pythonNodes.pythonNodeData")
-        node_class = getattr(module, className)
-        return node_class(*args, interface=_interface, **kwargs)
+        try:
+            node_class = getattr(module, className)
+            return node_class(*args, interface=_interface, **kwargs)
+        except Exception as e:
+            print(e)
+            node_class = getattr(module, "PrintNode")
+            return node_class(*args, interface=_interface, **kwargs)
 
     def connectPlug(self, connectedNode: AbstractNodeData, connectedPlug, whichOutPlug, connection):
         self.nodeData.connect(connectedNode, connectedPlug.index, whichOutPlug.index)

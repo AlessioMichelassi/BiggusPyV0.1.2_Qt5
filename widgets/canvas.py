@@ -1,8 +1,9 @@
+import ast
 import json
 import random
 
 from PyQt5 import Qt
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import QPointF, QPoint
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
@@ -32,7 +33,7 @@ su disco e successivamente caricato
 """
 
 
-class canvas(QWidget):
+class Canvas(QWidget):
     node_name_list = ["NumberNode", "StringNode", "ListNode", "DictNode", "SumNode",
                       "ProductNode", "PowerNode", "DivisionNode", "RemainderNode",
                       "PrintNode", "ReplaceNode", "ConcatNode", "IfNode", "ForNode",
@@ -40,20 +41,29 @@ class canvas(QWidget):
     mainLayout: QLayout
     graphicView: graphicViewOverride
     graphicScene: graphicSceneOverride
-    filename = "untitled"
+    _filename = "untitled"
     sceneWidth = 5000
     sceneHeight = 5000
     name = "untitled"
     isDebugActive = False
 
     def __init__(self, parent=None):
-        super(canvas, self).__init__(parent)
+        super(Canvas, self).__init__(parent)
 
         self.nodesInTheScene = []
         self.connections = []
         self.nodeNames = []
         self.initUI()
         self.mainWin = parent
+
+    @property
+    def fileName(self):
+        return self._filename
+
+    @fileName.setter
+    def fileName(self, fileName):
+        self._filename = fileName
+        self.mainWin.setWindowTitle(f"'BiggusPyV0.1.2' - {self.fileName}")
 
     def initUI(self):
         self.graphicScene = graphicSceneOverride()
@@ -123,21 +133,24 @@ class canvas(QWidget):
 
     def createNodeFromDialog(self, nodeName, centerPoint):
         x = random.randint(1, 100)
-        if "Number" in nodeName:
-            node = AbstractNodeInterface(nodeName, value=x, view=self)
-        elif "DictNode" in nodeName:
-            node = AbstractNodeInterface(nodeName, value="", view=self)
-        elif "CallNode" in nodeName:
-            node = AbstractNodeInterface(nodeName, name=nodeName, view=self)
-        elif "VariableNode" in nodeName:
-            node = AbstractNodeInterface(nodeName, value=x, name=nodeName, view=self)
-        elif "Function" in nodeName:
-            node = AbstractNodeInterface(nodeName, function=None, view=self)
-        else:
-            node = AbstractNodeInterface(nodeName, view=self)
+        try:
+            if "Number" in nodeName:
+                node = AbstractNodeInterface(nodeName, value=x, view=self.graphicView)
+            elif "DictNode" in nodeName:
+                node = AbstractNodeInterface(nodeName, value="", view=self.graphicView)
+            elif "CallNode" in nodeName:
+                node = AbstractNodeInterface(nodeName, name=nodeName, view=self.graphicView)
+            elif "VariableNode" in nodeName:
+                node = AbstractNodeInterface(nodeName, value=x, name=nodeName, view=self.graphicView)
+            elif "Function" in nodeName:
+                node = AbstractNodeInterface(nodeName, function=None, view=self.graphicView)
+            else:
+                node = AbstractNodeInterface(nodeName, view=self.graphicView)
 
-        self.addNodeToTheScene(node, centerPoint)
-        return node
+            self.addNodeToTheScene(node, centerPoint)
+            return node
+        except Exception as e:
+            print(f"{nodeName} not in list")
 
     def addNodeToTheScene(self, nodeInterface, mousePos):
         index = 0
@@ -151,7 +164,75 @@ class canvas(QWidget):
 
         self.nodesInTheScene.append(nodeInterface)
 
+    def createNodeFromCode(self, code: str):
+        # parse the code into an AST
+        parsed_code = ast.parse(code)
+
+        # define a variable to keep track of the nodes
+        nodes = []
+
+        # iterate over the AST and create nodes for each statement
+        for node in ast.walk(parsed_code):
+            if isinstance(node, ast.FunctionDef):
+                # _function_node = FunctionNode(node.name, None)
+                _node = AbstractNodeInterface(node.name, view=self.graphicView)
+                if _node is not None:
+                    nodes.append(_node)
+            elif isinstance(node, ast.For):
+                # _for_node = ForNode(None)
+                _node = AbstractNodeInterface("ForNode", view=self.graphicView)
+                if _node is not None:
+                    nodes.append(_node)
+            elif isinstance(node, ast.If):
+                _node = AbstractNodeInterface("IfNode", view=self.graphicView)
+                if _node is not None:
+                    nodes.append(_node)
+            elif isinstance(node, ast.Call):
+                try:
+                    if isinstance(node.func, ast.Name):
+                        # call_node = CallNode(node.func.id, None)
+                        _node = AbstractNodeInterface("CallNode", value=node.func.id, view=self.graphicView)
+                    elif isinstance(node.func, ast.Attribute):
+                        # call_node = CallNode(node.func.attr, None)
+                        _node = AbstractNodeInterface("CallNode", value=node.func.attr, view=self.graphicView)
+                    if _node is not None:
+                        nodes.append(_node)
+                except Exception as e:
+                    print("*" * 20)
+                    print(e)
+                    print("*" * 20)
+            elif isinstance(node, ast.Name):
+                # _variable_node = VariableNode(node.id, None, None)
+                _node = AbstractNodeInterface(node.id, view=self.graphicView)
+                if _node is not None:
+                    nodes.append(_node)
+            elif isinstance(node, ast.Num):
+                # number_node = NumberNode(node.n, None)
+                _node = AbstractNodeInterface(node.n, view=self.graphicView)
+                if _node is not None:
+                    nodes.append(_node)
+        return nodes
+
+    def pasteCode(self, code):
+        nodes = self.createNodeFromCode(code)
+        """for node in nodes:
+            x = 200
+            y = 200
+            centerPoint = QPoint(x, y)
+            self.createNodeFromDialog(node, centerPoint)
+            y += 300"""
+        print(nodes)
+
+    def newScene(self):
+        self.graphicScene.clear()
+
+    def loadScene(self):
+        self.newScene()
+
     def saveScene(self):
+        return self.serialize()
+
+    def saveAsScene(self):
         return self.serialize()
 
     def serialize(self):
@@ -201,38 +282,3 @@ class canvas(QWidget):
                 break
         for connection in connections:
             node.deserializeConnection(connection)
-
-    def deserializeConnection(self, json_data):
-        # sourcery skip: list-comprehension
-        _connection = json.loads(json_data)
-        input_node_index = _connection["inputNodeName"]
-        inPlugIndex = int(_connection["inputPlug"])
-        output_node_index = _connection["outputNodeName"]
-        outPlugIndex = int(_connection["outputPlug"])
-        connect: list['AbstractNodeInterface'] = []
-        # recupera i nodi e i plugs dalle rispettive liste
-        for inNode in self.nodesInTheScene:
-            if inNode.title == input_node_index:
-                connect.append(inNode)
-        for outNode in self.nodesInTheScene:
-            if outNode.title == output_node_index:
-                connect.append(outNode)
-
-        outputNode = connect[1]
-        inputNode = connect[0]
-
-        outPlug: 'plugGraphic' = outputNode.nodeData.dataOutPlugs[outPlugIndex].plugGraphic
-        inPlug: 'plugGraphic' = inputNode.nodeData.dataInPlugs[inPlugIndex].plugGraphic
-
-        connection = Connection(outPlug, inPlug)
-        print(f"{self.indexDeserialize}: out node is {outputNode.title} input node is {inputNode.title}")
-        print(f"trying connect {outputNode.title} {outPlug.name} -> {inputNode.title} -> {outPlug.name}")
-        if connection not in outputNode.nodeData.inConnection:
-            self.graphicView.scene().addItem(connection)
-            outputNode.connectPlug(connect[0].nodeData, inPlug, outPlug, connection)
-            print("connected!")
-            self.indexDeserialize += 1
-        else:
-            print(f"{self.indexDeserialize}: {outputNode.title} not connected with {inputNode.title}")
-            print(outputNode.nodeData.inConnection)
-            self.indexDeserialize += 1

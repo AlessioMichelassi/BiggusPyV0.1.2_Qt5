@@ -1,7 +1,9 @@
+from pathlib import Path
+
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
-from widgets.canvas import canvas
+from widgets.canvas import Canvas
 
 """
 La classe MainWindow contiene una serie di metodi che inizializzano l'interfaccia utente, creano la barra di stato, 
@@ -21,7 +23,7 @@ Il metodo initMenu crea il menù della finestra e aggiunge alcune azioni al men�
 
 
 class MainWindow(QMainWindow):
-    canvas: canvas
+    canvas: Canvas
     statusMousePosition: QLabel
     filename = "untitled"
 
@@ -30,6 +32,7 @@ class MainWindow(QMainWindow):
         self.initUI()
         self.createStatusBar()
         self.initMenu()
+        self.home_dir = str(Path.home())
 
     def initUI(self):
         self.setWindowTitle("BiggusPy(a great Caesar's friend) V0.1.2")
@@ -38,7 +41,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('BiggusPyV0.1.2')
         # Imposta l'icona della finestra
         self.setWindowIcon(QIcon('graphicElement/imgs/BiggusIcon.ico'))
-        self.canvas = canvas()
+        self.canvas = Canvas()
         self.setCentralWidget(self.canvas)
 
     def createStatusBar(self):
@@ -57,17 +60,23 @@ class MainWindow(QMainWindow):
         editMenu = menubar.addMenu('Edit')
 
         # Aggiungi un'azione al menù File
+        newAction = QAction('new', self)
         openAction = QAction('open', self)
         saveAction = QAction('save', self)
+        saveAsAction = QAction('saveAs', self)
         exitAction = QAction('Quit', self)
         exitAction.setShortcut('Ctrl+Q')
 
+        newAction.triggered.connect(self.new)
         openAction.triggered.connect(self.open)
         saveAction.triggered.connect(self.save)
+        saveAsAction.triggered.connect(self.saveAs)
         exitAction.triggered.connect(qApp.quit)
 
+        fileMenu.addAction(newAction)
         fileMenu.addAction(openAction)
         fileMenu.addAction(saveAction)
+        fileMenu.addAction(saveAsAction)
         fileMenu.addAction(exitAction)
 
         # Aggiungi un'azione al menù Modifica
@@ -75,15 +84,37 @@ class MainWindow(QMainWindow):
         cutAction.setShortcut('Ctrl+X')
         editMenu.addAction(cutAction)
 
-    def save(self):
-        data = self.canvas.saveScene()
-        with open("testSave.txt", "w+") as f:
-            f.write(data)
+    def new(self):
+        self.canvas.newScene()
 
     def open(self):
-        self.canvas.graphicScene.clear()
-        data = ""
-        with open("testSave.txt", "r") as f:
-            data = f.read()
-
+        fname, _ = QFileDialog.getOpenFileName(self, 'Open file', self.home_dir)
+        if fname:
+            with open(fname, "r") as f:
+                data = f.read()
+        self.canvas.newScene()
+        self.canvas.filename = fname
         self.canvas.deserialize(data)
+
+    def save(self):
+        data = self.canvas.saveScene()
+        if self.canvas.filename == "untitled":
+            self.saveAs()
+        else:
+            try:
+                with open(self.canvas.filename, "w+") as f:
+                    f.write(data)
+            except Exception as e:
+                print(f"there was an error saving file: {e}")
+
+    def saveAs(self):
+        data = self.canvas.saveScene()
+        fname, _ = QFileDialog.getSaveFileName(self, 'Save file', self.home_dir)
+        if fname:
+            try:
+                with open(fname, "w+") as f:
+                    f.write(data)
+                self.canvas.filename = fname
+            except Exception as e:
+                print(f"there was an error saving file: {e}")
+                print(data)

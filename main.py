@@ -72,6 +72,7 @@ def setPalette(app):
 
 def main():
     app = QApplication(sys.argv)
+    clipboard = app.clipboard()
     setPalette(app)
     window = MainWindow()
     window.show()

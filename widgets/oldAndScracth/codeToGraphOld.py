@@ -16,7 +16,6 @@ class CodeToGraph:
         self.nodes = []
         self.node_name_list = self.canvas.node_name_list
         self.nodeNameCreated = []
-        self.onlyNodes = []
         self.connect = []
 
     def parseCode2(self, _code: str):
@@ -38,14 +37,14 @@ class CodeToGraph:
                             if isinstance(arg, ast.Num):
                                 self.createNumberNode(arg, variableName, callNode)
             elif isinstance(_node, ast.BinOp) and isinstance(_node.op,
-                                                             (ast.Add, ast.Mult, ast.Sub, ast.Div)):
+                                                               (ast.Add, ast.Mult, ast.Sub, ast.Div)):
                 leftNode = self.getNodeByName(_node.left.id)
                 rightNode = self.getNodeByName(_node.right.id)
                 if leftNode and rightNode:
                     self.createSumNode(_node.op, leftNode, rightNode)
 
+
     def parseCode(self, _code: str):
-        index = 0
         # sourcery skip: for-index-underscore
         tree = ast.parse(_code)
         for _node in ast.walk(tree):
@@ -58,23 +57,17 @@ class CodeToGraph:
                         # crea un VariableNode
                         variableName = target.id
                         callNode = self.getNodeByName(_node.value.func.id)
-                        var = self.createVariableNode(variableName, callNode)
-                        self.dictionaryCreator(index, var.title, var, [callNode])
-
-                        self.dictionaryCreator(index, callNode.title, callNode, [])
+                        self.createVariableNode(variableName, callNode)
                         for i, arg in enumerate(_node.value.args):
                             # Crea un NumberNode
                             if isinstance(arg, ast.Num):
-                                var = self.createNumberNode(arg, variableName, callNode)
-                                self.dictionaryCreator(index, var.title, var, [callNode])
-                index += 1
+                                self.createNumberNode(arg, variableName, callNode)
             if isinstance(_node, ast.BinOp) and isinstance(_node.op, (ast.Add, ast.Mult, ast.Sub, ast.Div)):
                 leftNode = self.getNodeByName(_node.left.id)
                 rightNode = self.getNodeByName(_node.right.id)
                 if leftNode and rightNode:
-                    var = self.createSumNode(_node.op, leftNode, rightNode)
-                    self.dictionaryCreator(index, var.title, var, [])
-                index += 1
+                    self.createSumNode(_node.op, leftNode, rightNode)
+
 
     def checkIfNameExist(self, _node):
         print(f"searching for {_node.title}")
@@ -89,12 +82,10 @@ class CodeToGraph:
                 return _node
         return None
 
-    def dictionaryCreator(self, index, nodeType: str, nodeName: str, *args):
+    def dictionaryCreator(self, nodeType: str, nodeName: str, *args):
         if nodeType not in self.NodeToBeCreated:
-            self.NodeToBeCreated.append([])
-            self.onlyNodes.append([])
-        self.NodeToBeCreated[index] += ([nodeName, nodeType, *args])
-        self.onlyNodes[index] += [nodeName]
+            self.NodeToBeCreated[nodeType] = []
+        self.NodeToBeCreated[nodeType].append([nodeName, *args])
 
     def createFunction(self, originalCode, _node, tree):
         # sourcery skip: extract-method, move-assign, move-assign-in-block, use-join
@@ -133,7 +124,6 @@ class CodeToGraph:
         variableNode.nodeGraphic.setTitle(variableNode.title)
         self.connect.append((variableNode, _callNode, 0, 0, None))
         self.nodes.append(variableNode)
-        return variableNode
 
     def createNumberNode(self, _arg, _name, _callNode):
         numberNode = self.canvas.createNodeFromDialog("NumberNode", self.centerPoint)
@@ -144,7 +134,6 @@ class CodeToGraph:
         self.nodes.append(numberNode)
         self.connect.append((numberNode, _callNode, 0, 0, None))
         print(f"NumberNode with title {numberNode.title} will be connected to {_callNode.title}")
-        return numberNode
 
     def createSumNode(self, operator, leftNode, rightNode):
         sumNode = self.canvas.createNodeFromDialog("SumNode", self.centerPoint)
@@ -153,7 +142,6 @@ class CodeToGraph:
 
         # self.connect(leftNode, 0, sumNode, 0)
         # self.connect(rightNode, 0, sumNode, 1)
-        return sumNode
 
     def createConnection(self):
         moveX = 100
@@ -164,21 +152,6 @@ class CodeToGraph:
             conn[0].connectPlug(conn[1], 0, 0, None)
             moveX += 100
             moveY += 100
-
-    def positionNodes(self):
-        x_0_pos = (500, 500)
-        add_and_multiply_0_pos = (x_0_pos[0] - 350 - 200, 500)
-        number_node_0_pos = (add_and_multiply_0_pos[0], add_and_multiply_0_pos[1] + 50)
-        number_node_1_pos = (add_and_multiply_0_pos[0], add_and_multiply_0_pos[1] + 100)
-        number_node_2_pos = (add_and_multiply_0_pos[0], add_and_multiply_0_pos[1] + 150)
-        # posiziona i nodi
-        node = self.onlyNodes[0]
-        node[0].nodeGraphic.setPos(x_0_pos[0], x_0_pos[1])
-        node[1].nodeGraphic.setPos(add_and_multiply_0_pos[0], add_and_multiply_0_pos[1])
-        node[2].nodeGraphic.setPos(number_node_0_pos[0], number_node_0_pos[1])
-        node[3].nodeGraphic.setPos(number_node_1_pos[0], number_node_1_pos[1])
-        node[4].nodeGraphic.setPos(number_node_2_pos[0], number_node_2_pos[1])
-        # continua con le altre righe del codice
 
     def create_graph(self):  # sourcery skip: merge-isinstance
         # Create connections between nodes based on variable names

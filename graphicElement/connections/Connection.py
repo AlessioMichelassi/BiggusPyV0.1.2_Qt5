@@ -46,7 +46,7 @@ class Arrow(QGraphicsItem):
 
     def paint(self, painter, _QStyleOptionGraphicsItem, widget=None):
         # Disegniamo la freccia utilizzando un QPainter
-        painter.setPen(QPen(Qt.black, 2, Qt.DashLine))
+        painter.setPen(QPen(Qt.GlobalColor.black, 2, Qt.PenStyle.DashLine))
         painter.drawLine(self.start_point, self.end_point)
 
 

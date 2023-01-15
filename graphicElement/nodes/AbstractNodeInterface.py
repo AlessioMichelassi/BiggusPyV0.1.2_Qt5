@@ -98,7 +98,7 @@ class Observer:
         self.observedNodesList.append(node)
 
     def update(self):
-        print(f"updating from {self.mainNode.title}")
+        # print(f"updating from {self.mainNode.title}")
         for observed_node in self.observedNodesList:
             observed_node.nodeData.calculate()
             self.mainNode.nodeData.calculate()
@@ -114,7 +114,6 @@ class AbstractNodeInterface:
         # Crea l'istanza del nodoData
         self.type = className
         self.nodeData = self.createNode(className, *args, _interface=self, **kwargs)
-        print(type(view))
         if isinstance(view, type('Canvas')):
             self.canvas = view
             self.graphicView = self.canvas.graphicView

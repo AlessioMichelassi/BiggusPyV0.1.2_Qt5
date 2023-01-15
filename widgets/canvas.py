@@ -220,6 +220,9 @@ class Canvas(QWidget):
         else:
             parser = CodeToGraph(self)
             parser.parseCode(code)
+            parser.positionNodes()
+            print(parser.onlyNodes)
+            #parser.createConnection()
             #nodes = parser.create_graph()
             #print(nodes)
 

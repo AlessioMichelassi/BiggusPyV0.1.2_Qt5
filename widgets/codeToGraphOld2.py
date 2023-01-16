@@ -1,6 +1,9 @@
 import ast
+import json
 
 from PyQt5.QtCore import QPoint
+import networkx as nx
+from matplotlib import pyplot as plt
 
 from graphicElement.connections.Connection import Connection
 from graphicElement.nodes.AbstractNodeInterface import AbstractNodeInterface
@@ -10,43 +13,22 @@ class CodeToGraph:
     centerPoint = QPoint(100, 100)
     NodeToBeCreated = []
     functionToBeConnected = []
+    _graph: nx.DiGraph
 
     def __init__(self, canvas: 'canvas'):
         self.canvas = canvas
         self.nodes = []
         self.node_name_list = self.canvas.availableNode
         self.nodeNameCreated = []
+        self.onlyNodes = []
+        self.allNodes = []
         self.connect = []
 
-    def parseCode2(self, _code: str):
-        # sourcery skip: for-index-underscore
-        tree = ast.parse(_code)
-        for _node in ast.walk(tree):
-            if isinstance(_node, ast.FunctionDef):
-                self.createFunction(_code, _node, tree)
-                break
-            elif isinstance(_node, ast.Assign):
-                for target in _node.targets:
-                    if isinstance(target, ast.Name) and isinstance(_node.value, ast.Call):
-                        # crea un VariableNode
-                        variableName = target.id
-                        callNode = self.getNodeByName(_node.value.func.id)
-                        self.createVariableNode(variableName, callNode)
-                        for i, arg in enumerate(_node.value.args):
-                            # Crea un NumberNode
-                            if isinstance(arg, ast.Num):
-                                self.createNumberNode(arg, variableName, callNode)
-            elif isinstance(_node, ast.BinOp) and isinstance(_node.op,
-                                                               (ast.Add, ast.Mult, ast.Sub, ast.Div)):
-                leftNode = self.getNodeByName(_node.left.id)
-                rightNode = self.getNodeByName(_node.right.id)
-                if leftNode and rightNode:
-                    self.createSumNode(_node.op, leftNode, rightNode)
-
-
     def parseCode(self, _code: str):
+        index = 0
         # sourcery skip: for-index-underscore
         tree = ast.parse(_code)
+        self.create_graph()
         for _node in ast.walk(tree):
             if isinstance(_node, ast.FunctionDef):
                 self.createFunction(_code, _node, tree)
@@ -57,17 +39,31 @@ class CodeToGraph:
                         # crea un VariableNode
                         variableName = target.id
                         callNode = self.getNodeByName(_node.value.func.id)
-                        self.createVariableNode(variableName, callNode)
+                        callNode.nodeData.index = index
+                        var = self.createVariableNode(variableName, callNode)
+                        self.add_node(str(var.title))
+                        self.add_edge(str(callNode.title), str(var.title))
+                        self.dictionaryCreator(index, var.title, var, [callNode])
+                        self.dictionaryCreator(index, callNode.title, callNode, [])
+
                         for i, arg in enumerate(_node.value.args):
                             # Crea un NumberNode
                             if isinstance(arg, ast.Num):
-                                self.createNumberNode(arg, variableName, callNode)
+                                var = self.createNumberNode(arg, variableName, callNode)
+                                self.dictionaryCreator(index, var.title, var, [callNode])
+                                self.add_node(str(var.title))
+                                self.add_edge(str(callNode.title), str(var.title))
+                index += 1
             if isinstance(_node, ast.BinOp) and isinstance(_node.op, (ast.Add, ast.Mult, ast.Sub, ast.Div)):
                 leftNode = self.getNodeByName(_node.left.id)
                 rightNode = self.getNodeByName(_node.right.id)
                 if leftNode and rightNode:
-                    self.createSumNode(_node.op, leftNode, rightNode)
-
+                    var = self.createSumNode(_node.op, leftNode, rightNode)
+                    self.add_node(var.title)
+                    self.add_edge(leftNode.title, var.title)
+                    self.add_edge(rightNode.title, var.title)
+                    self.dictionaryCreator(index, var.title, var, [])
+                index += 1
 
     def checkIfNameExist(self, _node):
         print(f"searching for {_node.title}")
@@ -82,10 +78,14 @@ class CodeToGraph:
                 return _node
         return None
 
-    def dictionaryCreator(self, nodeType: str, nodeName: str, *args):
+    def dictionaryCreator(self, index, nodeType: str, nodeName, *args):
         if nodeType not in self.NodeToBeCreated:
-            self.NodeToBeCreated[nodeType] = []
-        self.NodeToBeCreated[nodeType].append([nodeName, *args])
+            self.NodeToBeCreated.append([])
+            self.onlyNodes.append([])
+        self.NodeToBeCreated[index] += ([nodeName, nodeType, *args])
+        self.onlyNodes[index] += [nodeName]
+        if nodeName not in self.allNodes:
+            self.allNodes.append(nodeName)
 
     def createFunction(self, originalCode, _node, tree):
         # sourcery skip: extract-method, move-assign, move-assign-in-block, use-join
@@ -119,29 +119,27 @@ class CodeToGraph:
     def createVariableNode(self, _name, _callNode):
         variableNode = self.canvas.createNodeFromDialog("VariableNode", self.centerPoint)
         variableNode.nodeData.setArbitraryName(_name)
-        print(f"created a VariableNode Called {variableNode.title}")
+
         self.checkIfNameExist(variableNode)
         variableNode.nodeGraphic.setTitle(variableNode.title)
         self.connect.append((variableNode, _callNode, 0, 0, None))
         self.nodes.append(variableNode)
+        return variableNode
 
     def createNumberNode(self, _arg, _name, _callNode):
         numberNode = self.canvas.createNodeFromDialog("NumberNode", self.centerPoint)
-        print(f"created a NumberNode Called {numberNode.title} with value {_arg.n}")
+
         numberNode.nodeData.changeInputValue(0, _arg.n)
         self.checkIfNameExist(numberNode)
 
         self.nodes.append(numberNode)
         self.connect.append((numberNode, _callNode, 0, 0, None))
-        print(f"NumberNode with title {numberNode.title} will be connected to {_callNode.title}")
+        return numberNode
 
     def createSumNode(self, operator, leftNode, rightNode):
         sumNode = self.canvas.createNodeFromDialog("SumNode", self.centerPoint)
         self.checkIfNameExist(sumNode)
-        # sumNode.nodeData.operator = operator
-
-        # self.connect(leftNode, 0, sumNode, 0)
-        # self.connect(rightNode, 0, sumNode, 1)
+        return sumNode
 
     def createConnection(self):
         moveX = 100
@@ -153,16 +151,46 @@ class CodeToGraph:
             moveX += 100
             moveY += 100
 
-    def create_graph(self):  # sourcery skip: merge-isinstance
-        # Create connections between nodes based on variable names
-        for i, node in enumerate(self.nodes):
-            if isinstance(node, 'NumberNode'):
-                for j, node2 in enumerate(self.nodes):
-                    if i == j:
-                        continue
-                    if isinstance(node2, 'SumNode') or isinstance(node2, 'CallNode'):
-                        for input_plug in node2.dataInPlugs:
-                            if input_plug.name == node.name:
-                                node.connect(node2, 0, input_plug.index)
-                                break
-        return self.nodes
+    def create_graph(self):
+        self._graph = nx.DiGraph()
+
+    def add_node(self, node):
+        self._graph.add_node(node)
+
+    def add_edge(self, node1, node2):
+        self._graph.add_edge(node1, node2)
+
+    import matplotlib.pyplot as plt
+
+    def positionNodes(self):
+        startPosX = 500
+        startPosY = 500
+        for node in self.nodes:
+            print(node.title)
+        pos = nx.spring_layout(self._graph)
+        edge_labels = {(n1, n2): w for n1, n2, w in self._graph.edges(data='weight')}
+        nx.draw(self._graph, pos, with_labels=True, font_weight='bold')
+        nx.draw_networkx_edge_labels(self._graph, pos, edge_labels=edge_labels)
+        plt.show()
+        for node in self._graph.nodes:
+            x = pos[node][0]
+            y = pos[node][1]
+            jsonizedNode = []
+            for MyNodes in self.nodes:
+                jsonizedNode.append(MyNodes.serialize())
+                if node == MyNodes.title:
+                    print("finded")
+                    newX = startPosX * x * 2
+                    newY = startPosY * y * 2
+                    MyNodes.nodeGraphic.setPos(newX, newY)
+        for string in jsonizedNode:
+            a = json.dumps(string.replace("    '\'", '\n'))
+            print(a)
+
+
+
+
+
+
+
+

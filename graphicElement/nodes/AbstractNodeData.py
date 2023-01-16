@@ -32,7 +32,7 @@ class AbstractNodeData:
         self.index = index
         self.name = tempName[0]
 
-    def madeArbitraryName(self, name):
+    def setArbitraryName(self, name):
         self.name = name
 
     def createPlugs(self):

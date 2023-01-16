@@ -104,4 +104,4 @@ class Connection(QGraphicsItem):
             'outputNodeName': self.outputNode.title,
             'outputPlug': self.outputPlug.index,
         }
-        return json.dumps(dicts)
+        return json.dumps(dicts, indent=4)

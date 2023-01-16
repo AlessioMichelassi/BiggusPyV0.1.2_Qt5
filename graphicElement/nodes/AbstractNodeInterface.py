@@ -236,7 +236,7 @@ class AbstractNodeInterface:
             ('outPlugsNumb', self.nodeData.numberOfOutputPlugs),
             ('connections', connections)
         ])
-        return json.dumps(dicts)
+        return json.dumps(dicts, indent=4)
 
     indexDeserialize = 0
 

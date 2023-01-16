@@ -153,6 +153,27 @@ class Canvas(QWidget):
         except Exception as e:
             print(f"{nodeName} not in list")
 
+    def createNodeFromCode(self, nodeName, x=None, string=None) -> AbstractNodeInterface:
+        if x is None or x == "":
+            x = random.randint(1, 100)
+        try:
+            if "NumberNode" in nodeName:
+                node = AbstractNodeInterface(nodeName, value=x, view=self.graphicView)
+            elif "DictNode" in nodeName:
+                node = AbstractNodeInterface(nodeName, value="", view=self.graphicView)
+            elif "CallNode" in nodeName:
+                node = AbstractNodeInterface(nodeName, name=nodeName, view=self.graphicView)
+            elif "VariableNode" in nodeName:
+                node = AbstractNodeInterface(nodeName, value=x, name=nodeName, view=self.graphicView)
+            elif "FunctionNode" in nodeName:
+                node = AbstractNodeInterface(nodeName, function=string, view=self.graphicView)
+            else:
+                node = AbstractNodeInterface(nodeName, view=self.graphicView)
+            return node
+        except Exception as e:
+            print(f"{nodeName} not in list")
+            return None
+
     def addNodeToTheScene(self, nodeInterface, mousePos):
         index = 0
         self.graphicScene.addItem(nodeInterface.nodeGraphic)
@@ -221,10 +242,6 @@ class Canvas(QWidget):
             parser = CodeToGraph(self)
             parser.parseCode(code)
             parser.positionNodes()
-            print(parser.onlyNodes)
-            #parser.createConnection()
-            #nodes = parser.create_graph()
-            #print(nodes)
 
     def newScene(self):
         self.graphicScene.clear()

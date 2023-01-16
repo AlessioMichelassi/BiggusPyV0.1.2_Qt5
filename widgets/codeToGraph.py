@@ -167,11 +167,15 @@ class CodeToGraph:
 
     def positionNodes(self):
         x_0_pos = (500, 500)
+        rect = (500, 500, 500, 500)
         add_and_multiply_0_pos = (x_0_pos[0] - 350 - 200, 500)
         number_node_0_pos = (add_and_multiply_0_pos[0], add_and_multiply_0_pos[1] + 50)
         number_node_1_pos = (add_and_multiply_0_pos[0], add_and_multiply_0_pos[1] + 100)
         number_node_2_pos = (add_and_multiply_0_pos[0], add_and_multiply_0_pos[1] + 150)
         # posiziona i nodi
+        for node in self.onlyNodes:
+            if node is not []:
+                print(node)
         node = self.onlyNodes[0]
         node[0].nodeGraphic.setPos(x_0_pos[0], x_0_pos[1])
         node[1].nodeGraphic.setPos(add_and_multiply_0_pos[0], add_and_multiply_0_pos[1])

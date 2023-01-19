@@ -1,4 +1,3 @@
-import ast
 import random
 from typing import Dict, Union, List
 
@@ -56,7 +55,6 @@ class NumberNode(AbstractNodeData):
 
     def __init__(self, value: Union[int, float], interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.className = "NumberNode"
         self.name = "Number"
         self.resetValue = value
         self.dataInPlugs = []
@@ -101,7 +99,6 @@ class SumNode(AbstractNodeData):
 
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "SumNode"
         self.name = "Sum"
         self.resetValue = 0
         self.dataInPlugs = []
@@ -148,7 +145,6 @@ class ProductNode(AbstractNodeData):
 
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "ProductNode"
         self.name = "Product"
         self.resetValue = 0
         self.dataInPlugs = []
@@ -196,7 +192,6 @@ class ExpNode(AbstractNodeData):
 
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "ExponentialNode"
         self.name = "Exponential"
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -240,7 +235,6 @@ class ExpNode(AbstractNodeData):
 class DivisionNode(AbstractNodeData):
     def __init__(self, isInteger=False, interface=None):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "DivisionNode"
         self.isInteger = isInteger
         self.name = "Division"
         self.dataInPlugs = []
@@ -289,11 +283,8 @@ class DivisionNode(AbstractNodeData):
 
 
 class RemainderNode(AbstractNodeData):
-    lineEdit: QLineEdit
-
     def __init__(self, isInteger=False, interface=None):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "RemainderNode"
         self.name = "Reminder"
         self.dataInPlugs = []
         self.dataOutPlugs = []
@@ -345,7 +336,6 @@ class StringNode(AbstractNodeData):
 
     def __init__(self, value: str, interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.className = "StringNode"
         self.name = "String"
         self.resetValue = value
         self.dataInPlugs = []
@@ -391,7 +381,6 @@ class ListNode(AbstractNodeData):
 
     def __init__(self, value: List[Union[int, float, str]], interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.className = "ListNode"
         self.name = "List"
         self.resetValue = value
         self.dataInPlugs = []
@@ -452,7 +441,6 @@ class DictNode(AbstractNodeData):
 
     def __init__(self, value: dict, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "DictionaryrNode"
         self.name = "Dictionary"
         self.resetValue = ""
         self.dataInPlugs = []
@@ -500,7 +488,6 @@ class DictNode(AbstractNodeData):
 class ConcatNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "ConcatNode"
         self.name = "ConcatNode"
         self.resetValue = ""
         self.dataInPlugs = []
@@ -517,7 +504,6 @@ class ConcatNode(AbstractNodeData):
 class ReplaceNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=3, numOuts=1, interface=interface)
-        self.className = "ReplaceNode"
         self.name = "Replace"
         self.resetValue = ""
         self.dataInPlugs = []
@@ -535,7 +521,6 @@ class ReplaceNode(AbstractNodeData):
 class PrintNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.className = "PrintNode"
         self.name = "Print"
         self.resetValue = ""
         self.dataInPlugs = []
@@ -589,7 +574,6 @@ class PrintNode(AbstractNodeData):
 class AndNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "AndNode"
         self.name = "And"
         self.resetValue = ""
         self.dataInPlugs = []
@@ -637,7 +621,6 @@ class AndNode(AbstractNodeData):
 class OrNode(AbstractNodeData):
     def __init__(self, interface):
         super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "OrNode"
         self.name = "Or"
         self.resetValue = ""
         self.dataInPlugs = []
@@ -686,7 +669,6 @@ class IfNode(AbstractNodeData):
 
     def __init__(self, interface):
         super().__init__(numIn=3, numOuts=1, interface=interface)
-        self.className = "IfNode"
         self.name = "if"
         self.resetValue = False
         self.dataInPlugs = []
@@ -789,18 +771,27 @@ class functionWidget(QWidget):
 class FunctionNode(AbstractNodeData):
     mainWidget: functionWidget
     _function = None
-    _functionString = ""
 
-    def __init__(self, name, function, interface):
-        super().__init__(numIn=2, numOuts=1, interface=interface)
-        self.className = "FunctionNode"
-        self.name = name
+    def __init__(self, function, interface):
+        super().__init__(numIn=2, numOuts=1, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
+        self.name = "FunctionNode"
         self.resetValue = "def default_function(arg1, arg2):\n    return arg1 + arg2"
         self.functionString = function or self.resetValue
         self.dataInPlugs = []
         self.dataOutPlugs = []
         self.createPlugs()
-        self.setFunctionGlobalFromString()
+        if function is None:
+            print("function was None")
+            self.functionString = self.resetValue
+            self.function = self.createFunctionFromString("default_function", self.functionString)
+        else:
+            try:
+                functionTemp = function.split("(")
+                functionName = functionTemp[0].replace("def ", "").strip()
+                self.function = self.createFunctionFromString(functionName, function)
+                self.functionString = function
+            except Exception as e:
+                print(e)
         self.args = []
         self.kwargs = {}
 
@@ -812,44 +803,52 @@ class FunctionNode(AbstractNodeData):
     def function(self, function):
         self._function = function
 
-    @property
-    def functionString(self):
-        return self._functionString
-
-    @functionString.setter
-    def functionString(self, functionString):
-        if self.isNodeInCreation:
-            self.nodeInterface.addFunctionStringAtEndOfCreation = functionString
-        else:
-            self._functionString = functionString
-            self.setterFunctionString()
-            if self.mainWidget.txtFunction.toPlainText() != self._functionString:
-                self.mainWidget.txtFunction.setPlainText(self._functionString)
-            self.setFunctionGlobalFromString()
-
-    def setterFunctionString(self):
-        parsed = ast.parse(self.functionString)
-        function = next(node for node in ast.walk(parsed) if isinstance(node, ast.FunctionDef))
-        num_args = len(function.args.args)
-        self.nodeInterface.addPlugs(num_args, 0)
-
-    def setFunctionGlobalFromString(self):
+    def createFunctionFromString(self, name, functionString):
         try:
-            functionCode = self.functionString
+            functionCode = f"{functionString}"
             functionGlobals = {}
             exec(functionCode, functionGlobals)
-            self.function = functionGlobals[functionCode.split("(")[0].replace("def ", "").strip()]
+            self.functionString = functionCode
+            return functionGlobals[name]
         except Exception as e:
             print("this function not working for biggus")
 
+    def calculate(self):
+        """
+        La funzione calculate di AbstractNodeData viene
+        chiamata quando si vuole calcolare il nuovo valore dei plugs di output del nodo.
+        :return:
+        """
+        returnString = f"{self.title} "
+        for i, outPlug in enumerate(self.dataOutPlugs):
+            outPlug.value = self.calculateOutput(i)
+            returnString += f"{outPlug.name} = {outPlug.value}"
+            if outPlug.connection:
+                connection = outPlug.connection
+                endNode = outPlug.connection.inputNode
+                index = connection.inputPlug.plugData.index
+                endNode.changeInputValue(index, outPlug.value, None)
+        try:
+            self.nodeInterface.nodeGraphic.updateTextValue()
+        except Exception as e:
+            print(e)
+
     def calculateOutput(self, outIndex: int):  # sourcery skip: assign-if-exp
+        functionCode = self.mainWidget.txtFunction.toPlainText()
+        functionTemp = functionCode.split("(")
+        functionName = functionTemp[0].replace("def ", "").strip()
+        q = self.createFunctionFromString(functionName, functionCode)
         if self.isNodeInCreation:
             return 0
-        args = [plug.value for plug in self.dataInPlugs if plug.connectedWith]
-        if not args:
-            args = [0] * len(self.dataInPlugs)
-
-        self.dataOutPlugs[outIndex].value = self.function(*args)
+        if self.dataInPlugs[0].connectedWith:
+            arg1 = self.dataInPlugs[0].value
+        else:
+            arg1 = 0
+        if self.dataInPlugs[1].connectedWith:
+            arg2 = self.dataInPlugs[1].value
+        else:
+            arg2 = 1
+        self.dataOutPlugs[outIndex].value = q(arg1, arg2)
         return self.dataOutPlugs[outIndex].value
 
     def updateText(self, value):
@@ -885,7 +884,6 @@ class FunctionNode(AbstractNodeData):
 class CallNode(AbstractNodeData):
     def __init__(self, name: str, interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.className = "CallNode"
         self.name = name
         self.resetValue = False
         self.dataInPlugs = []
@@ -933,7 +931,6 @@ class CallNode(AbstractNodeData):
 class VariableNode(AbstractNodeData):
     def __init__(self, name: str, value: any, interface):
         super().__init__(numIn=1, numOuts=1, interface=interface)
-        self.className = "VariableNode"
         self.name = name
         self.resetValue = value
         self._value = value
@@ -988,7 +985,6 @@ class VariableNode(AbstractNodeData):
 class ForNode(AbstractNodeData):
     def __init__(self, interface=None):
         super().__init__(numIn=3, numOuts=1, interface=interface)  # il nodo For Loop ha un solo ingresso e due uscite
-        self.className = "ForLoopNode"
         self.name = "ForLoopNode"
         self.resetValue = False
         self.dataInPlugs = []

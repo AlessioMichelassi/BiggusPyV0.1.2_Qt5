@@ -108,6 +108,9 @@ class AbstractNodeInterface:
     nodeGraphic: AbstractNodeGraphic
     nodeData: AbstractNodeData
     observer: Observer
+    lockPlug = False
+    addFunctionStringAtEndOfCreation = None
+    isTextTitleNeedToBeUpdate = False
 
     def __init__(self, className: str, *args, view: 'graphicViewOverride', **kwargs):
 
@@ -130,6 +133,11 @@ class AbstractNodeInterface:
             self.nodeGraphic.setValueFromGraphics(kwargs['value'])
 
         self.nodeData.redefineGraphics()
+        if self.addFunctionStringAtEndOfCreation:
+            if self.isTextTitleNeedToBeUpdate:
+                self.isTextTitleNeedToBeUpdate = False
+                self.updateTitleInNodeGraphic()
+            self.nodeData.functionString = self.addFunctionStringAtEndOfCreation
         self.observer = Observer(self)
 
     @property
@@ -139,6 +147,12 @@ class AbstractNodeInterface:
     @title.setter
     def title(self, _name):
         self.nodeGraphic.setTitle(self.nodeData.title)
+
+    def updateTitleInNodeGraphic(self):
+        if self.nodeData.isNodeInCreation:
+            self.isTextTitleNeedToBeUpdate = True
+        else:
+            self.nodeGraphic.setTitle(self.title)
 
     def changeIndex(self, _index):
         self.nodeData.index = _index
@@ -153,6 +167,39 @@ class AbstractNodeInterface:
 
         numOutputs = self.nodeData.numberOfOutputPlugs
         self.nodeGraphic.createPlugsOut(numOutputs)
+
+    def addPlugs(self, inPlugNumber: int, outPlugNumber: int):
+        if not self.lockPlug:
+            self.addInPlug(inPlugNumber)
+            self.addOutPlug(outPlugNumber)
+            self.nodeGraphic.repositionThePlugForDefaultFigure()
+            self.lockPlug = True
+
+    def addInPlug(self, inPlugNumber):
+        plugLeft = inPlugNumber - len(self.nodeData.dataInPlugs)
+        if plugLeft > 0:
+            inIndex = len(self.nodeData.dataInPlugs)
+            for _ in range(plugLeft):
+                # aggiunge il plugData
+                self.nodeData.numberOfInputPlugs += 1
+                plugIn = self.nodeData.addInPlug(inIndex)
+                # aggiunge il plugGraphic
+                plug = plugIn.createGraphicPlug("In", self.nodeGraphic)
+                self.nodeGraphic.graphicInputPlugs.append(plug)
+                inIndex += 1
+
+    def addOutPlug(self, outPlugNumber):
+        plugRight = outPlugNumber - len(self.nodeData.dataOutPlugs)
+        if plugRight > 0:
+            outIndex = len(self.nodeData.dataOutPlugs)
+            for _ in range(plugRight):
+                # aggiunge il plugData
+                self.nodeData.numberOfOutputPlugs += 1
+                plugOut = self.nodeData.addOutPlug(outIndex)
+                # aggiunge il plugGraphic
+                plug = plugOut.createGraphicPlug("Out", self.nodeGraphic)
+                self.nodeGraphic.graphicOutputPlugs.append(plug)
+                outIndex += 1
 
     @staticmethod
     def createNode(className: str, *args, _interface, **kwargs) -> AbstractNodeData:
@@ -172,44 +219,39 @@ class AbstractNodeInterface:
             return node_class(*args, interface=_interface, **kwargs)
         except Exception as e:
             print(e)
-            node_class = getattr(module, "PrintNode")
-            return node_class(*args, interface=_interface, **kwargs)
+
+    def filterConnection(self, connection: Connection):
+
+        outputNode = connection.outputNode
+        print(f"debug from filter connection: self={self.title} {connection.outputNode.title} -> {connection.inputNode.title}")
+        if type(outputNode) is AbstractNodeInterface:
+            if outputNode.title != self.title:
+                print("filtered")
+                return False
+        elif type(outputNode) is AbstractNodeData:
+            if outputNode.title != self.title:
+                print("filtered")
+                return False
+        else:
+            print("notFiltered")
+            return True
 
     def connectPlug(self, connectedNode: AbstractNodeData, connectedPlug, whichOutPlug, connection):
-        if connection is None:
-            self.connectPlugWithNoneConnection(connectedNode, connectedPlug, whichOutPlug)
-        else:
-            self.nodeData.connect(connectedNode, connectedPlug.index, whichOutPlug.index)
-
+        if self.filterConnection(connection):
             if "Out" in whichOutPlug.name:
+
                 if connection not in self.nodeData.outConnection:
+                    print(f"appendecConnection in {self.title}: {connection.outputNode.title} -> {connection.inputNode.title}")
                     self.nodeData.outConnection.append(connection)
-            else:
-                self.nodeData.inConnection.append(connection)
-            self.nodeData.dataOutPlugs[whichOutPlug.index].connectedWith = connectedPlug
-            self.nodeData.dataOutPlugs[whichOutPlug.index].connection = connection
-            connectedNode.changeInputValue(connectedPlug.index, whichOutPlug.plugData.value)
-            self.nodeData.calculate()
-
-    def connectPlugWithNoneConnection(self, connectedNode, connectedPlug, whichOutPlug):
-            # accade quando si copia e incolla un codice altrimenti
-            # la connection viene definita se si trascina una freccia da un plug altro
-            print(connectedNode)
-            print(connectedPlug)
-            print(whichOutPlug)
-            inPlug = connectedNode.nodeData.dataInPlugs[connectedPlug].plugGraphic
-            connection = Connection(self.nodeData.dataOutPlugs[whichOutPlug].plugGraphic, inPlug, self.nodeGraphic)
-            self.graphicView.scene().addItem(connection)
-            self.nodeData.connect(connectedNode.nodeData, connectedPlug, whichOutPlug)
-
-            self.nodeData.dataOutPlugs[whichOutPlug].connectedWith = inPlug.plugData
-            self.nodeData.dataOutPlugs[whichOutPlug].connection = connection
-            outPlug = self.nodeData.dataInPlugs[connectedPlug].plugGraphic
-            connectedNode.nodeData.changeInputValue(connectedPlug, outPlug.plugData.value)
-            self.nodeData.calculate()
+        else:
+            self.nodeData.inConnection.append(connection)
+        self.nodeData.dataOutPlugs[whichOutPlug.index].connectedWith = connectedPlug
+        self.nodeData.dataOutPlugs[whichOutPlug.index].connection = connection
+        connectedNode.changeInputValue(connectedPlug.index, whichOutPlug.plugData.value)
+        self.nodeData.calculate()
 
     def disconnectPlug(self, connectedNode: AbstractNodeData, connectedPlug, whichOutPlug):
-       pass
+        pass
 
     def addObservedNode(self, node):
         self.observer.addObservedNode(node)
@@ -226,7 +268,9 @@ class AbstractNodeInterface:
             connections.append(connection.serialize())
 
         dicts = OrderedDict([
-            ('name', self.nodeData.title),
+            ('className', self.nodeData.className),
+            ('name', self.nodeData.name),
+            ('title', self.nodeData.title),
             ('index', self.nodeData.index),
             ('type', self.type),
             ('value', self.nodeData.value),
@@ -236,39 +280,5 @@ class AbstractNodeInterface:
             ('outPlugsNumb', self.nodeData.numberOfOutputPlugs),
             ('connections', connections)
         ])
+        print(dicts)
         return json.dumps(dicts, indent=4)
-
-    indexDeserialize = 0
-
-    def deserializeConnection(self, json_data):
-        # sourcery skip: All
-        _connection = json.loads(json_data)
-        inputNodeName = _connection["inputNodeName"]
-        inPlugIndex = int(_connection["inputPlug"])
-        outputNodeName = _connection["outputNodeName"]
-        outPlugIndex = int(_connection["outputPlug"])
-        connect: list['AbstractNodeInterface'] = []
-        # recupera i nodi e i plugs dalle rispettive liste
-        for inNode in self.canvas.nodesInTheScene:
-            if inNode.title == inputNodeName:
-                connect.append(inNode)
-
-        if self.title == outputNodeName:
-            outputNode = self
-            inputNode = connect[0]
-
-            outPlug: 'plugGraphic' = outputNode.nodeData.dataOutPlugs[outPlugIndex].plugGraphic
-            inPlug: 'plugGraphic' = inputNode.nodeData.dataInPlugs[inPlugIndex].plugGraphic
-
-            connection = Connection(outPlug, inPlug)
-            print(f"{self.indexDeserialize}: out node is {outputNode.title} input node is {inputNode.title}")
-            print(f"trying connect {outputNode.title} {outPlug.name} -> {inputNode.title} -> {outPlug.name}")
-            if connection not in outputNode.nodeData.inConnection:
-                self.graphicView.scene().addItem(connection)
-                outputNode.connectPlug(connect[0].nodeData, inPlug, outPlug, connection)
-                print("connected!")
-                self.indexDeserialize += 1
-            else:
-                print(f"{self.indexDeserialize}: {outputNode.title} not connected with {inputNode.title}")
-                print(outputNode.nodeData.inConnection)
-                self.indexDeserialize += 1

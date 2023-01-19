@@ -30,7 +30,7 @@ class NodeNameInputWidget(QWidget):
         self.canvas = canvas
         self.graphicView = view
         self.centerPoint = centerPoint
-        self.node_name_list = self.canvas.availableNode
+        self.node_name_list = self.canvas.node_name_list
 
         self.completer = QCompleter(self.node_name_list)
         self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)

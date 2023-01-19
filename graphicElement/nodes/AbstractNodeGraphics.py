@@ -86,7 +86,7 @@ class AbstractNodeGraphic(QGraphicsItem):
     def createTitleText(self):
         self.txtTitle = QGraphicsTextItem(self)
         self.txtTitle.setTextInteractionFlags(Qt.TextInteractionFlag.TextEditorInteraction)
-        self.txtTitle.setPlainText(self.nodeInterface.nodeData.title)
+        self.txtTitle.setPlainText(self.nodeInterface.title)
         x = (self.txtTitle.boundingRect().width() // 3)
         self.txtTitle.setPos(-x, -30)  # Posiziona la label 20 pixel sopra il centro del nodo
         self.txtTitle.setDefaultTextColor(Qt.GlobalColor.white)
@@ -208,29 +208,31 @@ class AbstractNodeGraphic(QGraphicsItem):
 
     def repositionThePlugForDefaultFigure(self):
         inNumber = len(self.nodeData.dataInPlugs)
-        x = -8
-        if inNumber == 0:
-            return
-        elif inNumber == 1:
-            y = self.height // 2
-        else:
-            y = (self.height // inNumber)
-        for i in range(inNumber):
-            plug = self.nodeInterface.nodeData.dataInPlugs[i].plugGraphic
-            plug.setPos(QPointF(x, y))
-            y += plug.diameter * 3
-        outNumber = len(self.nodeData.dataOutPlugs)
-        x = self.width - 2
-        if outNumber == 0:
-            return
-        elif outNumber == 1:
-            y = self.height // 2
-        else:
-            y = (self.height // inNumber)
-        for i in range(outNumber):
-            plug = self.nodeInterface.nodeData.dataOutPlugs[i].plugGraphic
-            plug.setPos(QPointF(x, y))
-            y += plug.diameter * 3
+        if not self.nodeInterface.lockPlug:
+            x = -8
+            if inNumber == 0:
+                return
+            elif inNumber == 1:
+                y = self.height // 2
+            else:
+                y = (self.height // inNumber)
+            for i in range(inNumber):
+                plug = self.nodeInterface.nodeData.dataInPlugs[i].plugGraphic
+                plug.setPos(QPointF(x, y))
+                y += plug.diameter * 3
+
+            outNumber = len(self.nodeData.dataOutPlugs)
+            x = self.width - 2
+            if outNumber == 0:
+                return
+            elif outNumber == 1:
+                y = self.height // 2
+            else:
+                y = (self.height // inNumber)
+            for i in range(outNumber):
+                plug = self.nodeInterface.nodeData.dataOutPlugs[i].plugGraphic
+                plug.setPos(QPointF(x, y))
+                y += plug.diameter * 3
 
     def changeTextToInPlug(self, index, text):
         plug = self.nodeInterface.nodeData.dataInPlugs[index].plugGraphic
@@ -270,7 +272,7 @@ class AbstractNodeGraphic(QGraphicsItem):
         x = plug.txtTitle.boundingRect().width()
         x = (x * -1) - 5
         plug.txtTitle.setPos(x, -10)
-        plug.setPos(10, self.height -20)
+        plug.setPos(10, self.height - 20)
 
         plug = self.nodeInterface.nodeData.dataOutPlugs[0].plugGraphic
         plug.txtTitle.setPlainText("if true")
@@ -284,7 +286,7 @@ class AbstractNodeGraphic(QGraphicsItem):
         x = plug.txtTitle.boundingRect().width()
         x = 10
         plug.txtTitle.setPos(x, -10)
-        plug.setPos(100, self.height -20)
+        plug.setPos(100, self.height - 20)
 
         if self.isThereAProxyWidget:
             x = (self.width - textItemWidth) // 2

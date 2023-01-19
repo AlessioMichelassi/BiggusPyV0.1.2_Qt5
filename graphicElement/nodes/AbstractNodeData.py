@@ -15,7 +15,8 @@ class AbstractNodeData:
     inConnection: list['Connection'] = []
     outConnection: list['inConnection'] = []
 
-    def __init__(self, numIn: int, numOuts: int, interface):
+    def __init__(self, numIn: int, numOuts: int, interface: 'AbstractNodeInterface'):
+        self.className = "abstractDataNode"
         self.name = "abstractDataNode"
         self.nodeInterface = interface
         self.numberOfInputPlugs = numIn
@@ -32,7 +33,8 @@ class AbstractNodeData:
         self.index = index
         self.name = tempName[0]
 
-    def setArbitraryName(self, name):
+    def setArbitraryName(self, name: str):
+        self.index = 0
         self.name = name
 
     def createPlugs(self):
@@ -43,26 +45,15 @@ class AbstractNodeData:
             plugOut = PlugData(i, "Out", 0, self)
             self.dataOutPlugs.append(plugOut)
 
-    def addPlug(self, inPlugNumb, outPlugNumb):
-        nodeGraphic = self.nodeInterface.nodeGraphic
-        inIndex = len(self.dataInPlugs)
-        for _ in range(inPlugNumb):
-            # aggiunge il plugData
-            plugIn = PlugData(inIndex, "In", 0, self)
-            self.dataInPlugs.append(plugIn)
-            # aggiunge il plugGraphic
-            plug = plugIn.createGraphicPlug("In", nodeGraphic)
-            nodeGraphic.graphicInputPlugs.append(plug)
-            inIndex += 1
+    def addInPlug(self, index):
+        plugIn = PlugData(index, "In", 0, self)
+        self.dataInPlugs.append(plugIn)
+        return plugIn
 
-        for i in range(outPlugNumb):
-            # aggiunge il plugData
-            plugOut = PlugData(i, "Out", 0, self)
-            self.dataOutPlugs.append(plugOut)
-            # aggiunge il plugGraphic
-            plug = plugOut.createGraphicPlug("In", nodeGraphic)
-            nodeGraphic.graphicOutputPlugs.append(plug)
-        nodeGraphic.repositionThePlugForDefaultFigure()
+    def addOutPlug(self, index):
+        plugOut = PlugData(index, "Out", 0, self)
+        self.dataOutPlugs.append(plugOut)
+        return plugOut
 
     def changeInputValue(self, inputIndex, value, boolean=True):
         self.dataInPlugs[inputIndex].value = value
@@ -83,7 +74,8 @@ class AbstractNodeData:
         if input_index < len(node.dataInPlugs):
             node.dataInPlugs[input_index] = self.dataOutPlugs[output_index]
         else:
-            print(f"{self.title} has an input error. inputIndex was = {input_index} but plugNumb is {len(self.dataInPlugs)}")
+            print(
+                f"{self.title} has an input error. inputIndex was = {input_index} but plugNumb is {len(self.dataInPlugs)}")
             # raise IndexError("Input index out of range.")
 
     def disconnect(self, node: "AbstractNodeData", input_index: int, output_index: int):
@@ -96,24 +88,25 @@ class AbstractNodeData:
         chiamata quando si vuole calcolare il nuovo valore dei plugs di output del nodo.
         :return:
         """
-        returnString = f"From Calculate: {self.title} "
-        for i, outPlug in enumerate(self.dataOutPlugs):
-            outPlug.value = self.calculateOutput(i)
-            returnString += f"{outPlug.name} = {outPlug.value}"
-            if outPlug.connection:
-                returnString += f"{returnString} outPlug is connected!"
-                connection = outPlug.connection
-                returnString += f"connected Plug is: {connection.inputPlug.plugData.name} = {connection.inputPlug.plugData.value}"
-                endNode = outPlug.connection.inputNode
-                returnString += f"endNode: {endNode.title}"
-
-                index = connection.inputPlug.plugData.index
-                endNode.changeInputValue(index, outPlug.value, None)
-                returnString += f"changedValue at{index} -> {outPlug.value}"
-                if self.isDebugging:
-                    print(returnString)
         if not self.isNodeInCreation:
-            self.nodeInterface.nodeGraphic.updateTextValue()
+            returnString = f"From Calculate: {self.title} "
+            for i, outPlug in enumerate(self.dataOutPlugs):
+                outPlug.value = self.calculateOutput(i)
+                returnString += f"{outPlug.name} = {outPlug.value}"
+                if outPlug.connection:
+                    returnString += f"{returnString} outPlug is connected!"
+                    connection = outPlug.connection
+                    returnString += f"connected Plug is: {connection.inputPlug.plugData.name} = {connection.inputPlug.plugData.value}"
+                    endNode = outPlug.connection.inputNode
+                    returnString += f"endNode: {endNode.title}"
+
+                    index = connection.inputPlug.plugData.index
+                    endNode.changeInputValue(index, outPlug.value, None)
+                    returnString += f"changedValue at{index} -> {outPlug.value}"
+                    if self.isDebugging:
+                        print(returnString)
+
+                self.nodeInterface.nodeGraphic.updateTextValue()
 
     def calculateOutput(self, outIndex: int) -> Union[int, float]:
         """

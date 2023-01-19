@@ -131,27 +131,27 @@ class Canvas(QWidget):
         if node_interface:
             self.addNodeToTheScene(node_interface, _mousePosition)
 
-    def createNodeFromDialog(self, nodeName, centerPoint, x=None, string=None):
+    def createNodeFromDialog(self, className: str, centerPoint, name=None, x=None, string=None):
         if x is None or x == "":
             x = random.randint(1, 100)
         try:
-            if "Number" in nodeName:
-                node = AbstractNodeInterface(nodeName, value=x, view=self.graphicView)
-            elif "DictNode" in nodeName:
-                node = AbstractNodeInterface(nodeName, value="", view=self.graphicView)
-            elif "CallNode" in nodeName:
-                node = AbstractNodeInterface(nodeName, name=nodeName, view=self.graphicView)
-            elif "VariableNode" in nodeName:
-                node = AbstractNodeInterface(nodeName, value=x, name=nodeName, view=self.graphicView)
-            elif "Function" in nodeName:
-                node = AbstractNodeInterface(nodeName, function=string, view=self.graphicView)
+            if "Number" in className:
+                node = AbstractNodeInterface(className, value=x, view=self.graphicView)
+            elif "DictNode" in className:
+                node = AbstractNodeInterface(className, value="", view=self.graphicView)
+            elif "CallNode" in className:
+                node = AbstractNodeInterface(className, name=className, view=self.graphicView)
+            elif "VariableNode" in className:
+                node = AbstractNodeInterface(className, value=x, name=className, view=self.graphicView)
+            elif "Function" in className:
+                node = AbstractNodeInterface(className, name=name, function=string, view=self.graphicView)
             else:
-                node = AbstractNodeInterface(nodeName, view=self.graphicView)
+                node = AbstractNodeInterface(className, view=self.graphicView)
 
             self.addNodeToTheScene(node, centerPoint)
             return node
         except Exception as e:
-            print(f"{nodeName} not in list")
+            print(f"{className} not in list")
 
     def createNodeFromCode(self, nodeName, x=None, string=None) -> AbstractNodeInterface:
         if x is None or x == "":
@@ -186,7 +186,7 @@ class Canvas(QWidget):
 
         self.nodesInTheScene.append(nodeInterface)
 
-    def createNodeFromCode(self, code: str):
+    def createNodeFromCode2(self, code: str):
         # parse the code into an AST
         parsed_code = ast.parse(code)
 
@@ -235,13 +235,29 @@ class Canvas(QWidget):
                     nodes.append(_node)
         return nodes
 
+    def getNodeByName(self, name: str):
+        # sourcery skip: use-next
+        for _node in self.nodesInTheScene:
+            if _node.nodeData.name == name:
+                return _node
+        return None
+
+    def getNodeByTitle(self, title: str):
+        # sourcery skip: use-next
+        listOFTile = ""
+        for _node in self.nodesInTheScene:
+            if _node.title == title:
+                return _node
+
     def pasteCode(self, code):
         if type(code) is json:
             print("json code find")
         else:
             parser = CodeToGraph(self)
             parser.parseCode(code)
+            parser.connectNode()
             parser.positionNodes()
+            parser.showGraph()
 
     def newScene(self):
         self.graphicScene.clear()
@@ -278,7 +294,10 @@ class Canvas(QWidget):
 
     def deserializeNode(self, serializedJsonDictionary):
         deserialized = json.loads(serializedJsonDictionary)
+
+        _className = deserialized["className"]
         _name = deserialized["name"]
+        _title = deserialized["title"]
         _index = deserialized["index"]
         _type = deserialized["type"]
         _value = deserialized["value"]
@@ -287,16 +306,37 @@ class Canvas(QWidget):
         _inPlugsNumb = deserialized["inPlugsNumb"]
         _outPlugsNumb = deserialized["outPlugsNumb"]
         pos = QPointF(float(_pos[0]), float(_pos[1]))
-        node = self.createNodeFromDialog(_type, pos, _value, _string)
+        node = self.createNodeFromDialog(_className, pos, _name, _value, _string)
         node.forceNodeNameOnLoad(_name, _index)
 
     def deserializeConnections(self, serializedJsonDictionary):
         deserialized = json.loads(serializedJsonDictionary)
         connections = deserialized["connections"]
-        nodeName = deserialized["name"]
-        for inNode in self.nodesInTheScene:
-            if inNode.title == nodeName:
-                node = inNode
-                break
+
         for connection in connections:
-            node.deserializeConnection(connection)
+            deserializedLine = json.loads(connection)
+            print(deserializedLine)
+            inputNodeName = deserializedLine["inputNodeName"]
+            inputIndexPlug = deserializedLine["inputPlug"]
+            outputNodeName = deserializedLine["outputNodeName"]
+            outputIndexPlug = deserializedLine["outputPlug"]
+
+            inputNode = self.getNodeByTitle(inputNodeName)
+            outputNode = self.getNodeByTitle(outputNodeName)
+
+            # this prevent Error
+            inputNode.nodeData.isNodeInCreation = True
+            outputNode.nodeData.isNodeInCreation = True
+
+            outPlugIndex = int(outputIndexPlug)
+            outPlug: 'plugGraphic' = outputNode.nodeData.dataOutPlugs[outPlugIndex].plugGraphic
+            inPlugIndex = int(inputIndexPlug)
+            inPlug: 'plugGraphic' = inputNode.nodeData.dataInPlugs[inPlugIndex].plugGraphic
+            connection = Connection(outPlug, inPlug)
+            if connection not in outputNode.nodeData.inConnection:
+                self.graphicView.scene().addItem(connection)
+
+        for node in self.nodesInTheScene:
+            node.nodeData.isisNodeInCreation = False
+
+
